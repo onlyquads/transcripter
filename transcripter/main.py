@@ -1,4 +1,5 @@
 import sys
+import time
 from PySide6 import QtCore, QtWidgets
 from transcripter import transcript, translate
 
@@ -8,8 +9,8 @@ class TranscriptionWorker(QtCore.QThread):
     Worker thread for running the transcription process
     without freezing the UI.
     """
-    progress = QtCore.Signal(int)  # Signal to update progress bar
-    finished = QtCore.Signal(str)  # Signal when transcription is complete
+    progress = QtCore.Signal(int)
+    finished = QtCore.Signal(str, float)
 
     def __init__(self, file_path, mode, language=None):
         super().__init__()
@@ -19,25 +20,30 @@ class TranscriptionWorker(QtCore.QThread):
 
     def run(self):
         """Runs the transcription process and emits progress signals."""
-        self.progress.emit(10)  # Start progress
+        start_time = time.time()
+
+        self.progress.emit(10)
         srt_file = transcript.transcript(self.file_path, self.mode)
 
         if self.language:  # If translation is required
-            self.progress.emit(50)  # Midway progress
+            self.progress.emit(50)
             translate.translate_srt(srt_file, self.language)
 
-        self.progress.emit(100)  # Finish progress
-        self.finished.emit(srt_file)  # Send back the generated file path
+        self.progress.emit(100)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+
+        self.finished.emit(srt_file, elapsed_time)
 
 
-class VideoSelectorApp(QtWidgets.QWidget):
+class VideoTranscriptor(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle("Video Selector")
-        self.setGeometry(100, 100, 400, 250)
+        self.setGeometry(100, 100, 200, 250)
 
         layout = QtWidgets.QVBoxLayout()
 
@@ -82,7 +88,9 @@ class VideoSelectorApp(QtWidgets.QWidget):
             self.file_label.setText(file_path)
 
     def launch_processing(self):
-        """Handles transcription launch in a separate thread."""
+        """
+        Handles transcription launch in a separate thread.
+        """
         input_file = self.file_label.text()
         selected_language = self.language_combo.currentText()
 
@@ -92,7 +100,7 @@ class VideoSelectorApp(QtWidgets.QWidget):
 
         # Reset UI for new processing task
         self.progress_bar.setValue(0)
-        self.launch_button.setEnabled(False)  # Disable button during processing
+        self.launch_button.setEnabled(False)
 
         # Determine processing mode
         if selected_language == "English":
@@ -118,20 +126,33 @@ class VideoSelectorApp(QtWidgets.QWidget):
         """Update the progress bar value."""
         self.progress_bar.setValue(value)
 
-    def transcription_complete(self, srt_file):
+    def transcription_complete(self, srt_file, elapsed_time):
         """Handles actions after transcription is complete."""
         self.progress_bar.setValue(100)
         self.file_label.setText(f"Transcription saved at:\n{srt_file}")
         print(f"Transcription saved at: {srt_file}")
 
+        # Show popup with computation time
+        self.show_popup(srt_file, elapsed_time)
+
         # Reset UI so user can start a new task
-        self.launch_button.setEnabled(True)  # Re-enable launch button
-        self.file_label.setText("No file selected")  # Reset file label
-        self.progress_bar.setValue(0)  # Reset progress bar
+        self.launch_button.setEnabled(True)
+        self.file_label.setText("No file selected")
+        self.progress_bar.setValue(0)
+
+    def show_popup(self, srt_file, elapsed_time):
+        """Show a message box with the transcription completion time."""
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setWindowTitle("Transcription Complete")
+        msg_box.setText(
+            f" Transcription saved at:\n{srt_file}\n Time taken: {elapsed_time:.2f} seconds")
+        msg_box.setIcon(QtWidgets.QMessageBox.Information)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg_box.exec()
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    window = VideoSelectorApp()
+    window = VideoTranscriptor()
     window.show()
     sys.exit(app.exec())
