@@ -2,15 +2,13 @@ import os
 import re
 from deep_translator import GoogleTranslator
 
-
 def translate_srt(input_srt, target_lang):
     """
     Translates an SRT file into a target language.
 
     Args:
         input_srt (str): Path to the original SRT file.
-        target_lang (str): Target language code
-        (e.g., "fr" for French, "de" for German).
+        target_lang (str): Target language code (e.g., "fr" for French, "de" for German).
 
     Returns:
         str: Path to the translated SRT file.
@@ -20,12 +18,22 @@ def translate_srt(input_srt, target_lang):
     base_name, _ = os.path.splitext(input_srt)
     output_srt = f"{base_name}_{target_lang}.srt"
 
+    # Read the content of the file for language detection
+    with open(input_srt, "r", encoding="utf-8") as file:
+        srt_lines = file.readlines()
+        srt_content = " ".join(srt_lines)[:500]  # Use first 500 characters for detection
+
     # Initialize translator
     translator = GoogleTranslator(source="auto", target=target_lang)
 
-    # Read original SRT file
-    with open(input_srt, "r", encoding="utf-8") as file:
-        srt_lines = file.readlines()
+    # Detect language from the file content
+    detected_lang = translator.detect(srt_content)
+
+    # If source and target languages are the same, copy file without translation
+    if detected_lang == target_lang:
+        os.rename(input_srt, output_srt)
+        print(f"Source and target languages are the same. File copied: {output_srt}")
+        return output_srt
 
     translated_lines = []
     buffer = []  # Temporary storage for subtitle text lines

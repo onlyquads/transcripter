@@ -1,45 +1,79 @@
 import os
 import whisper
+import torch
 
-
-def transcript(input_file, mode="translate", progress_callback=None):
+def transcript(
+    input_file,
+    mode="translate",
+    model_size="base",
+    language=None,
+    beam_size=5,
+    temperature=0.0,
+    word_timestamps=False,
+    fp16=None,
+    progress_callback=None,
+):
     """
     Transcribes or translates an audio file and generates an SRT file.
 
-    mode:
-        - "translate" (English translation)
-        - "transcribe" (original language)
-    progress_callback: Function to update the progress bar in UI.
+    Parameters:
+    - input_file (str): Path to the input audio file.
+    - mode (str): "translate" (English translation) or "transcribe" (original language).
+    - model_size (str): Whisper model size to use ("tiny", "base", "small", "medium", "large", "large-v2", "large-v3").
+    - language (str): Language code (e.g., "fr" for French). If None, Whisper auto-detects.
+    - beam_size (int): Beam search size for better accuracy.
+    - temperature (float): Decoding randomness (0.0 = deterministic, higher values allow variations).
+    - word_timestamps (bool): Enables word-level timestamps.
+    - fp16 (bool): Use mixed precision for faster CUDA inference (None = auto-detect).
+    - progress_callback (function): Function to update the progress bar in UI.
+
+    Returns:
+    - str: Path to the generated SRT file or None if an error occurs.
     """
 
-    # Manually set the FFmpeg path
-    ffmpeg_path = os.environ["FFMPEG"]
-    if not os.path.exists(ffmpeg_path):
-        raise FileNotFoundError(
-            "FFmpeg not found! Ensure FFmpeg is installed.")
+    # Ensure FFmpeg is correctly set
+    ffmpeg_path = os.environ.get("FFMPEG")
+    if not ffmpeg_path or not os.path.exists(ffmpeg_path):
+        raise FileNotFoundError("FFmpeg not found! Ensure FFmpeg is installed and set in environment variables.")
 
     print(f'>>> FFMPEG FOUND {ffmpeg_path}')
     os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
-
-    # Ensure Whisper can access FFmpeg
-    os.environ["FFMPEG_BINARY"] = ffmpeg_path
+    os.environ["FFMPEG_BINARY"] = ffmpeg_path  # Ensure Whisper can access FFmpeg
 
     try:
-        # Load the Whisper model
-        model = whisper.load_model("base")
+        # Select device (CUDA if available, otherwise CPU)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        print(f'>>> Using device: {device}')
 
-        # Emit progress to indicate model is loaded
+        # Auto-select fp16 based on device
+        if fp16 is None:
+            fp16 = device == "cuda"
+
+        # Load the specified Whisper model
+        print(f">>> Loading Whisper model: {model_size}...")
+        model = whisper.load_model(model_size).to(device)
+
+        # Emit progress: model loaded
         if progress_callback:
-            progress_callback(5)  # Set progress to 5% (model loading done)
+            progress_callback(5)
 
-        # Transcribe or Translate
-        result = model.transcribe(input_file, task=mode)
+        # Transcribe or translate
+        print(">>> Transcription in progress...")
+        result = model.transcribe(
+            input_file,
+            task=mode,
+            language=language,
+            beam_size=beam_size,
+            temperature=temperature,
+            word_timestamps=word_timestamps,
+            fp16=fp16,
+        )
 
-        # Emit progress (Transcription started)
+        # Emit progress: Transcription started
         if progress_callback:
             progress_callback(20)
 
-        # Convert transcription to SRT format
+        # Convert to SRT format
         srt_content = ""
         total_segments = len(result["segments"])
 
@@ -55,10 +89,9 @@ def transcript(input_file, mode="translate", progress_callback=None):
             # Append to SRT file format
             srt_content += f"{i+1}\n{start_time_srt} --> {end_time_srt}\n{text}\n\n"
 
-            # Update progress (Based on segment processing)
+            # Update progress
             if progress_callback:
                 progress_callback(int(((i + 1) / total_segments) * 80) + 10)
-
 
         # Save as an SRT file
         parent_dir = os.path.dirname(input_file)
@@ -74,7 +107,7 @@ def transcript(input_file, mode="translate", progress_callback=None):
         with open(srt_file, "w", encoding="utf-8") as f:
             f.write(srt_content)
 
-        # Emit progress (Finalizing)
+        # Emit progress: Finalizing
         if progress_callback:
             progress_callback(100)
 

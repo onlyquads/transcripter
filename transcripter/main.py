@@ -12,18 +12,22 @@ class TranscriptionWorker(QtCore.QThread):
     progress = QtCore.Signal(int)
     finished = QtCore.Signal(str, float)
 
-    def __init__(self, file_path, mode, language=None):
+    def __init__(self, file_path, mode, model_size, language=None):
         super().__init__()
         self.file_path = file_path
         self.mode = mode
         self.language = language
+        self.model_size = model_size
 
     def run(self):
         """Runs the transcription process and emits progress signals."""
         start_time = time.time()
 
         self.progress.emit(10)
-        srt_file = transcript.transcript(self.file_path, self.mode)
+        srt_file = transcript.transcript(
+            input_file=self.file_path,
+            mode=self.mode,
+            model_size=self.model_size)
 
         if self.language:  # If translation is required
             self.progress.emit(50)
@@ -64,6 +68,10 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.language_combo.addItems(["English", "French", "Dutch"])
         layout.addWidget(self.language_combo)
 
+        self.model_quality = QtWidgets.QComboBox()
+        self.model_quality.addItems(["base", "medium", "large"])
+        layout.addWidget(self.model_quality)
+
         # Progress bar
         self.progress_bar = QtWidgets.QProgressBar()
         self.progress_bar.setValue(0)
@@ -93,6 +101,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
         """
         input_file = self.file_label.text()
         selected_language = self.language_combo.currentText()
+        model_size = self.model_quality.currentText()
 
         if input_file == "No file selected":
             self.file_label.setText("Please select a video file!")
@@ -117,7 +126,11 @@ class VideoTranscriptor(QtWidgets.QWidget):
             return
 
         # Start worker thread
-        self.worker = TranscriptionWorker(input_file, mode, lang_target)
+        self.worker = TranscriptionWorker(
+            file_path=input_file,
+            mode=mode,
+            model_size=model_size,
+            language=lang_target)
         self.worker.progress.connect(self.update_progress)
         self.worker.finished.connect(self.transcription_complete)
         self.worker.start()
@@ -144,8 +157,12 @@ class VideoTranscriptor(QtWidgets.QWidget):
         """Show a message box with the transcription completion time."""
         msg_box = QtWidgets.QMessageBox()
         msg_box.setWindowTitle("Transcription Complete")
+        minutes = int(elapsed_time // 60)
+        seconds = elapsed_time % 60
+
         msg_box.setText(
-            f" Transcription saved at:\n{srt_file}\n Time taken: {elapsed_time:.2f} seconds")
+            f" Transcription saved at:\n{srt_file}\n Time taken: {minutes} min {seconds:.2f} sec"
+        )
         msg_box.setIcon(QtWidgets.QMessageBox.Information)
         msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
         msg_box.exec()

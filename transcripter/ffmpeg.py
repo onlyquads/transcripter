@@ -22,7 +22,7 @@ def get_ffmpeg_path():
                 ffmpeg_extract_path, extracted_folders[0], "bin")
             ffmpeg_exe_path = os.path.join(ffmpeg_bin_path, "ffmpeg.exe")
             if os.path.exists(ffmpeg_exe_path):
-                print(f"FFmpeg found at: {ffmpeg_exe_path}")
+                # print(f"FFmpeg found at: {ffmpeg_exe_path}")
                 return ffmpeg_exe_path
     return None
 
@@ -51,11 +51,11 @@ def install_ffmpeg():
         "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip")
 
     # Download FFmpeg
-    print(f"Downloading FFmpeg to: {ffmpeg_zip_path}")
+    # print(f"Downloading FFmpeg to: {ffmpeg_zip_path}")
     urllib.request.urlretrieve(ffmpeg_url, ffmpeg_zip_path)
 
     # Extract FFmpeg
-    print(f"Extracting FFmpeg to: {ffmpeg_extract_path}")
+    # print(f"Extracting FFmpeg to: {ffmpeg_extract_path}")
     with zipfile.ZipFile(ffmpeg_zip_path, 'r') as zip_ref:
         zip_ref.extractall(ffmpeg_extract_path)
 
@@ -71,7 +71,7 @@ def install_ffmpeg():
     ffmpeg_exe_path = os.path.join(ffmpeg_bin_path, "ffmpeg.exe")
 
     # Delete ZIP file after extraction
-    print(f"Deleting ZIP file: {ffmpeg_zip_path}")
+    # print(f"Deleting ZIP file: {ffmpeg_zip_path}")
     os.remove(ffmpeg_zip_path)
 
     # Verify installation
@@ -89,9 +89,3 @@ def install_ffmpeg():
         return None
 
 
-# Run the function and get the ffmpeg path
-ffmpeg_path = install_ffmpeg()
-if ffmpeg_path:
-    print(f"FFmpeg is installed at: {ffmpeg_path}")
-else:
-    print("FFmpeg installation failed.")
