@@ -2,10 +2,10 @@ numpy==1.26.0
 PySide6==6.5.0
 Shiboken6==6.5.0
 deep-translator
-whisper @ git+https://github.com/openai/whisper.git
+openai-whisper
 
-# PyTorch with CUDA (Separate Index)
+# PyTorch with CUDA 12.1 (BEST for RTX 2080 Ti)
 --extra-index-url https://download.pytorch.org/whl/cu121
-torch==2.1.0+cu121
-torchvision==0.16.0+cu121
-torchaudio==2.1.0+cu121
+torch
+torchaudio
+torchvision
