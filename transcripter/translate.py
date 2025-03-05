@@ -21,7 +21,8 @@ def translate_srt(input_srt, target_lang):
     # Read the content of the file for language detection
     with open(input_srt, "r", encoding="utf-8") as file:
         srt_lines = file.readlines()
-        srt_content = " ".join(srt_lines)[:500]  # Use first 500 characters for detection
+        # Use first 500 characters for detection
+        srt_content = " ".join(srt_lines)[:500]
 
     # Initialize translator
     translator = GoogleTranslator(source="auto", target=target_lang)
@@ -29,7 +30,8 @@ def translate_srt(input_srt, target_lang):
     # Detect language from the file content
     detected_lang = translator.detect(srt_content)
 
-    # If source and target languages are the same, copy file without translation
+    # If source and target languages are the same, copy file without
+    # translation
     if detected_lang == target_lang:
         os.rename(input_srt, output_srt)
         print(f"Source and target languages are the same. File copied: {output_srt}")

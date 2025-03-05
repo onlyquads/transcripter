@@ -18,6 +18,16 @@ def transcript(
 ):
     """
     Transcribes or translates an audio file and generates an SRT file.
+    Parameters:
+    - input_file (str): Path to the input audio file.
+    - mode (str): "translate" (English translation) or "transcribe" (original language).
+    - model_size (str): Whisper model size to use ("tiny", "base", "small", "medium", "large", "large-v2", "large-v3").
+    - language (str): Language code (e.g., "fr" for French). If None, Whisper auto-detects.
+    - beam_size (int): Beam search size for better accuracy.
+    - temperature (float): Decoding randomness (0.0 = deterministic, higher values allow variations).
+    - word_timestamps (bool): Enables word-level timestamps.
+    - fp16 (bool): Use mixed precision for faster CUDA inference (None = auto-detect).
+    - progress_callback (function): Function to update the progress bar in UI.
 
     - chunk_start_time (int): The starting timestamp of this chunk in seconds.
     """

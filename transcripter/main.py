@@ -16,12 +16,23 @@ class TranscriptionWorker(QtCore.QThread):
     progress = QtCore.Signal(int)
     finished = QtCore.Signal(str, float)
 
-    def __init__(self, file_path, mode, model_size, language=None):
+    def __init__(
+            self,
+            file_path,
+            mode,
+            model_size,
+            beam_size,
+            temperature,
+            chunk_duration,
+            language=None):
         super().__init__()
         self.file_path = file_path
         self.mode = mode
         self.language = language
         self.model_size = model_size
+        self.beam_size = beam_size
+        self.temperature = temperature
+        self.chunk_duration = chunk_duration
 
     def run(self):
         """Runs the transcription process and emits progress signals."""
@@ -29,7 +40,8 @@ class TranscriptionWorker(QtCore.QThread):
 
         # Split the video into chunks
         self.progress.emit(5)
-        video_chunks = ffmpeg.split_video_into_chunks(self.file_path)
+        video_chunks = ffmpeg.split_video_into_chunks(
+            self.file_path, chunk_duration=self.chunk_duration)
 
         if not video_chunks:
             self.finished.emit("Error: Video chunking failed.", 0)
@@ -37,8 +49,8 @@ class TranscriptionWorker(QtCore.QThread):
 
         # Temp storage for SRT files
         temp_srt_files = []
-        chunk_duration = 900  # 15 minutes default
-        correction_offset = -1  # Delay later chunks by 1 second
+        chunk_duration = self.chunk_duration
+        correction_offset = 0  # Delay later chunks by 1 second
 
         # Process each chunk separately
         for i, chunk in enumerate(video_chunks):
@@ -54,7 +66,9 @@ class TranscriptionWorker(QtCore.QThread):
                 input_file=chunk,
                 mode=self.mode,
                 model_size=self.model_size,
-                chunk_start_time=chunk_start_time  # Apply offset at transcription level
+                beam_size=self.beam_size,
+                temperature=self.temperature,
+                chunk_start_time=chunk_start_time
             )
 
             if chunk_srt:
@@ -116,7 +130,7 @@ class TranscriptionWorker(QtCore.QThread):
                             buffer = []
 
                     elif "-->" in line:  # Timestamp line
-                        buffer.append(line)  # Keep timestamp unchanged (already fixed)
+                        buffer.append(line)
 
                     else:
                         buffer.append(line)  # Subtitle text
@@ -145,34 +159,68 @@ class VideoTranscriptor(QtWidgets.QWidget):
         # Video selection button
         self.select_button = QtWidgets.QPushButton("Select Video")
         self.select_button.clicked.connect(self.select_video)
-        layout.addWidget(self.select_button)
 
         # Label to show selected file
         self.file_label = QtWidgets.QLabel("No file selected")
-        layout.addWidget(self.file_label)
 
         # Language selection dropdown
         self.language_label = QtWidgets.QLabel("Select Target Language:")
-        layout.addWidget(self.language_label)
 
         self.language_combo = QtWidgets.QComboBox()
         self.language_combo.addItems(["English", "French", "Dutch"])
-        layout.addWidget(self.language_combo)
 
+        self.model_label = QtWidgets.QLabel("Select Whisper model:")
         self.model_quality = QtWidgets.QComboBox()
         self.model_quality.addItems(["base", "medium", "large"])
-        layout.addWidget(self.model_quality)
+        self.model_quality.setToolTip(
+            "Size of the Whisper model. The better the slower")
+
+        self.temperature_label = QtWidgets.QLabel("Temperature:")
+
+        self.temperature_doublespin = QtWidgets.QDoubleSpinBox()
+        self.temperature_doublespin.setSingleStep(0.1)  # Set step increment
+        self.temperature_doublespin.setDecimals(1)  # Ensure only 1 decimal place
+        self.temperature_doublespin.setValue(0.1)
+        self.temperature_doublespin.setToolTip(
+            "higher value = more random output, lower = more deterministic")
+
+        self.beam_size_label = QtWidgets.QLabel("Beam Size:")
+        self.beam_side_doublespin = QtWidgets.QDoubleSpinBox()
+        self.beam_side_doublespin.setSingleStep(0.1)  # Set step increment
+        self.beam_side_doublespin.setDecimals(1)  # Ensure only 1 decimal place
+        self.beam_side_doublespin.setValue(0.5)
+        self.beam_side_doublespin.setToolTip(
+            "higher = better accuracy, but slower processing")
+
+        self.chunk_duration_label = QtWidgets.QLabel("Chunk Duration:")
+        self.chunk_duration_spinbox = QtWidgets.QSpinBox()
+        self.chunk_duration_spinbox.setRange(100, 600)
+        self.chunk_duration_spinbox.setSingleStep(1)
+        self.chunk_duration_spinbox.setValue(400)
+        self.chunk_duration_spinbox.setToolTip("Select a chunk value between 400 and 500")
 
         # Progress bar
         self.progress_bar = QtWidgets.QProgressBar()
         self.progress_bar.setValue(0)
-        layout.addWidget(self.progress_bar)
 
         # Launch button
         self.launch_button = QtWidgets.QPushButton("Launch")
         self.launch_button.clicked.connect(self.launch_processing)
-        layout.addWidget(self.launch_button)
 
+        layout.addWidget(self.select_button)
+        layout.addWidget(self.file_label)
+        layout.addWidget(self.language_label)
+        layout.addWidget(self.language_combo)
+        layout.addWidget(self.model_label)
+        layout.addWidget(self.model_quality)
+        layout.addWidget(self.beam_size_label)
+        layout.addWidget(self.beam_side_doublespin)
+        layout.addWidget(self.temperature_label)
+        layout.addWidget(self.temperature_doublespin)
+        layout.addWidget(self.chunk_duration_label)
+        layout.addWidget(self.chunk_duration_spinbox)
+        layout.addWidget(self.progress_bar)
+        layout.addWidget(self.launch_button)
         self.setLayout(layout)
 
     def select_video(self):
@@ -215,12 +263,17 @@ class VideoTranscriptor(QtWidgets.QWidget):
         else:
             self.file_label.setText("Unsupported language!")
             return
-
+        beam_size = self.beam_side_doublespin.value()
+        temperature = self.temperature_doublespin.value()
+        chunk_duration = self.chunk_duration_spinbox.value()
         # Start worker thread
         self.worker = TranscriptionWorker(
             file_path=input_file,
             mode=mode,
             model_size=model_size,
+            beam_size=beam_size,
+            temperature=temperature,
+            chunk_duration=chunk_duration,
             language=lang_target)
         self.worker.progress.connect(self.update_progress)
         self.worker.finished.connect(self.transcription_complete)
