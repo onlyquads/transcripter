@@ -68,7 +68,7 @@ class TranscriptionWorker(QtCore.QThread):
         Processes video chunks for transcription.
         """
         temp_srt_files = []
-        correction_offset = 0  # Small delay for synchronization
+        correction_offset = 0.5  # Small delay for synchronization
 
         for i, chunk in enumerate(video_chunks):
             self.update_progress(10 + int((i / len(video_chunks)) * 60))
