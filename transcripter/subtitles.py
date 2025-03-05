@@ -50,4 +50,3 @@ def merge_srt_files(srt_files, original_video_path):
 
     print(f">>> Successfully merged subtitles into: {merged_srt_path}")
     return merged_srt_path
-

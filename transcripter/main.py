@@ -1,5 +1,4 @@
 import sys
-
 from PySide6 import QtWidgets
 
 from transcripter import thread
@@ -86,7 +85,6 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.settings_container.layout().addWidget(self.temperature_doublespin)
         self.settings_container.layout().addWidget(self.chunk_duration_label)
         self.settings_container.layout().addWidget(self.chunk_duration_spinbox)
-
 
         self.main_layout.addWidget(self.select_button)
         self.main_layout.addWidget(self.file_label)

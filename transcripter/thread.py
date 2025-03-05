@@ -6,7 +6,6 @@ from transcripter import ffmpeg
 from transcripter import subtitles
 from transcripter import translate
 from transcripter import transcribe
-from transcripter import translate
 
 
 class TranscriptionWorker(QtCore.QThread):
