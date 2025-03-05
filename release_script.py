@@ -90,7 +90,8 @@ def launch_with_debug(script_path):
 
     # Properly quote the paths to handle spaces in directories
     if args:
-        command = f'cmd.exe /c ""{python_executable}" "{script_path}" {" ".join(args)}"'
+        command = (
+            f'cmd.exe /c ""{python_executable}" "{script_path}" {" ".join(args)}"')
     else:
         command = f'cmd.exe /c ""{python_executable}" "{script_path}""'
 

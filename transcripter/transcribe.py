@@ -34,11 +34,13 @@ def transcript(
 
     ffmpeg_path = os.environ.get("FFMPEG")
     if not ffmpeg_path or not os.path.exists(ffmpeg_path):
-        raise FileNotFoundError("FFmpeg not found! Ensure FFmpeg is installed and set in environment variables.")
+        raise FileNotFoundError(
+            "FFmpeg not found! Ensure FFmpeg is installed and set in environment variables.")
 
-    print(f'>>> FFMPEG FOUND {ffmpeg_path}')
+    print(f'>>> FFmpeg found at {ffmpeg_path}')
     os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
-    os.environ["FFMPEG_BINARY"] = ffmpeg_path  # Ensure Whisper can access FFmpeg
+    # Ensure Whisper can access FFmpeg
+    os.environ["FFMPEG_BINARY"] = ffmpeg_path
 
     try:
         # Select device (CUDA if available, otherwise CPU)

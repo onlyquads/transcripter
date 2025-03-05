@@ -2,13 +2,15 @@ import os
 import re
 from deep_translator import GoogleTranslator
 
+
 def translate_srt(input_srt, target_lang):
     """
     Translates an SRT file into a target language.
 
     Args:
         input_srt (str): Path to the original SRT file.
-        target_lang (str): Target language code (e.g., "fr" for French, "de" for German).
+        target_lang (str): Target language code
+            (e.g., "fr" for French, "de" for German).
 
     Returns:
         str: Path to the translated SRT file.

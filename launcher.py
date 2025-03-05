@@ -6,6 +6,7 @@ from transcripter import ffmpeg
 
 TOOLNAME = "dwtranscripter"
 
+
 def find_py_executable():
     """
     Search for python.exe in common Python installation directories.

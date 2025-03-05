@@ -14,18 +14,22 @@ def get_ffmpeg_path():
     ffmpeg_extract_path = os.path.join(
         documents_path, "dreamwall", "transcripter", "ffmpeg")
 
-    if os.path.exists(ffmpeg_extract_path):
-        extracted_folders = [
-            f for f in os.listdir(ffmpeg_extract_path)
-            if f.startswith("ffmpeg-")]
-        if extracted_folders:
-            ffmpeg_bin_path = os.path.join(
-                ffmpeg_extract_path, extracted_folders[0], "bin")
-            ffmpeg_exe_path = os.path.join(ffmpeg_bin_path, "ffmpeg.exe")
-            if os.path.exists(ffmpeg_exe_path):
-                # print(f"FFmpeg found at: {ffmpeg_exe_path}")
-                return ffmpeg_exe_path
-    return None
+    if not os.path.exists(ffmpeg_extract_path):
+        return None
+
+    extracted_folders = [
+        f for f in os.listdir(ffmpeg_extract_path)
+        if f.startswith("ffmpeg-")]
+
+    if not extracted_folders:
+        return None
+
+    ffmpeg_bin_path = os.path.join(
+        ffmpeg_extract_path, extracted_folders[0], "bin")
+    ffmpeg_exe_path = os.path.join(ffmpeg_bin_path, "ffmpeg.exe")
+    if os.path.exists(ffmpeg_exe_path):
+        # print(f"FFmpeg found at: {ffmpeg_exe_path}")
+        return ffmpeg_exe_path
 
 
 def install_ffmpeg():
@@ -106,11 +110,12 @@ def split_video_into_chunks(input_video, chunk_duration=400):
 
     ffmpeg_path = os.environ.get("FFMPEG")
     if not ffmpeg_path or not os.path.exists(ffmpeg_path):
-        raise FileNotFoundError("FFmpeg not found! Ensure FFmpeg is installed and set in environment variables.")
+        raise FileNotFoundError(
+            "FFmpeg not found!")
 
     print(f'>>> FFMPEG FOUND {ffmpeg_path}')
     os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
-    os.environ["FFMPEG_BINARY"] = ffmpeg_path  # Ensure Whisper can access FFmpeg
+    os.environ["FFMPEG_BINARY"] = ffmpeg_path
 
     # Get system temp folder
     temp_dir = tempfile.gettempdir()
@@ -122,9 +127,6 @@ def split_video_into_chunks(input_video, chunk_duration=400):
     # Define output file pattern inside temp folder
     output_pattern = os.path.join(
         temp_dir, f"{input_file_name_without_ext}_chunk_%03d{ext}")
-
-
-
 
     # FFmpeg command to split the video
     command = [
@@ -140,14 +142,15 @@ def split_video_into_chunks(input_video, chunk_duration=400):
 
     try:
         print(
-            f">>> Splitting {input_video} into 15-minute chunks in TEMP folder...")
+            f">>> Splitting {input_video} into chunks in TEMP folder...")
         subprocess.run(command, check=True)
 
         # Collect chunked files
         chunk_files = sorted([
             os.path.join(temp_dir, f)
             for f in os.listdir(temp_dir)
-            if f.startswith(f"{input_file_name_without_ext}_chunk_") and f.endswith(ext)
+            if f.startswith(
+                f"{input_file_name_without_ext}_chunk_") and f.endswith(ext)
         ])
 
         print(
