@@ -13,8 +13,8 @@ def find_py_executable():
     :return: The path to pyw.exe if found, or None if not found.
     """
     base_dirs = [
-        # "C:/Program Files/Python39",
-        # "C:/Program Files/Python310",
+        "C:/Program Files/Python39",
+        "C:/Program Files/Python310",
         "C:/Program Files/Python311",
         "C:/Program Files/Python312",
     ]
