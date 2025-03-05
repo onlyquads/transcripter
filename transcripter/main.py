@@ -38,6 +38,7 @@ class TranscriptionWorker(QtCore.QThread):
         # Temp storage for SRT files
         temp_srt_files = []
         chunk_duration = 900  # 15 minutes default
+        correction_offset = -1  # Delay later chunks by 1 second
 
         # Process each chunk separately
         for i, chunk in enumerate(video_chunks):
@@ -45,6 +46,9 @@ class TranscriptionWorker(QtCore.QThread):
 
             # Calculate the start time of this chunk
             chunk_start_time = i * chunk_duration
+
+            if i > 0:  # Apply small delay to later chunks
+                chunk_start_time += correction_offset
 
             chunk_srt = transcript.transcript(
                 input_file=chunk,
@@ -59,7 +63,7 @@ class TranscriptionWorker(QtCore.QThread):
             # Remove processed chunk to save space
             os.remove(chunk)
 
-        # Merge all SRT files into a final output (just concatenation now)
+        # Merge all SRT files into a final output
         self.progress.emit(80)
         final_srt = self._merge_srt_files(temp_srt_files, self.file_path)
 

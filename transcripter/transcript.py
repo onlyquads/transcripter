@@ -9,8 +9,8 @@ def transcript(
     mode="transcribe",
     model_size="base",
     language=None,
-    beam_size=5,
-    temperature=0.0,
+    beam_size=8,
+    temperature=0.1,
     word_timestamps=False,
     fp16=None,
     progress_callback=None,
@@ -41,6 +41,8 @@ def transcript(
 
         # Load the specified Whisper model
         print(f">>> Loading Whisper model: {model_size}...")
+        print(f">>> using beam_size value: {beam_size}")
+        print(f">>> using temperature value: {temperature}")
         model = whisper.load_model(model_size).to(device)
 
         # Emit progress: model loaded

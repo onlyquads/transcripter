@@ -90,7 +90,7 @@ def install_ffmpeg():
         return None
 
 
-def split_video_into_chunks(input_video, chunk_duration=900):
+def split_video_into_chunks(input_video, chunk_duration=400):
     """
     Splits a video into smaller chunks (default: 15 minutes max per chunk)
     and stores them in the Windows temp folder.
@@ -98,7 +98,7 @@ def split_video_into_chunks(input_video, chunk_duration=900):
     Parameters:
     - input_video (str): Path to the input video file.
     - chunk_duration (int): Maximum duration per chunk in seconds
-    (default: 900s = 15 minutes).
+    (default: 400s = 5 minutes).
 
     Returns:
     - List of chunked video file paths stored in the temp folder.
