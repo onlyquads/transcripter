@@ -1,7 +1,8 @@
 numpy==1.26.0
 PySide6==6.5.0
 Shiboken6==6.5.0
-deep-translator
+argostranslate
+langdetect
 openai-whisper
 
 # Force PyTorch to install CUDA 12.1 version

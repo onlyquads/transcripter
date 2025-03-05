@@ -6,6 +6,7 @@ from transcripter import ffmpeg
 from transcripter import subtitles
 from transcripter import translate
 from transcripter import transcribe
+from transcripter import translate
 
 
 class TranscriptionWorker(QtCore.QThread):
@@ -101,6 +102,8 @@ class TranscriptionWorker(QtCore.QThread):
         Translates the SRT file if a language is specified.
         """
         self.update_progress(90)
+        # translate.translate_srt(srt_file, self.language)
+        print('Launch translation')
         translate.translate_srt(srt_file, self.language)
 
     def cleanup(self, temp_srt_files: list):

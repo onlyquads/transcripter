@@ -14,7 +14,11 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.setWindowTitle("Video Transcriptor")
         self.setGeometry(100, 100, 200, 250)
 
-        layout = QtWidgets.QVBoxLayout()
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+        self.settings_container = QtWidgets.QFrame()
+        self.settings_container.setVisible(False)
+        self.settings_container.setLayout(QtWidgets.QVBoxLayout())
 
         # Video selection button
         self.select_button = QtWidgets.QPushButton("Select Video")
@@ -25,39 +29,48 @@ class VideoTranscriptor(QtWidgets.QWidget):
 
         # Language selection dropdown
         self.language_label = QtWidgets.QLabel("Select Target Language:")
-
         self.language_combo = QtWidgets.QComboBox()
-        self.language_combo.addItems(["English", "French", "Dutch"])
+        self.language_combo.addItems(["English", "French"])
 
+        # Select whisper model to use
         self.model_label = QtWidgets.QLabel("Select Whisper model:")
-        self.model_quality = QtWidgets.QComboBox()
-        self.model_quality.addItems(["base", "medium", "large"])
-        self.model_quality.setToolTip(
-            "Size of the Whisper model. The better the slower")
+        self.model_version = QtWidgets.QComboBox()
+        self.model_version.addItems(["base", "medium", "large"])
+        self.model_version.setToolTip(
+            "Select the Whisper model. The better the slower")
 
+        # Add setting checkbox
+        self.show_settings_checkbox = QtWidgets.QCheckBox("Settings")
+        self.show_settings_checkbox.setChecked(False)
+        self.show_settings_checkbox.stateChanged.connect(
+            self.toggle_settings)
+        # Set model temperature
         self.temperature_label = QtWidgets.QLabel("Temperature:")
 
         self.temperature_doublespin = QtWidgets.QDoubleSpinBox()
-        self.temperature_doublespin.setSingleStep(0.1)  # Set step increment
-        self.temperature_doublespin.setDecimals(1)  # Ensure only 1 decimal place
+        self.temperature_doublespin.setSingleStep(0.1)
+        self.temperature_doublespin.setDecimals(1)
         self.temperature_doublespin.setValue(0.1)
         self.temperature_doublespin.setToolTip(
             "higher value = more random output, lower = more deterministic")
 
+        # Set model beam_size
         self.beam_size_label = QtWidgets.QLabel("Beam Size:")
         self.beam_side_doublespin = QtWidgets.QDoubleSpinBox()
-        self.beam_side_doublespin.setSingleStep(0.1)  # Set step increment
-        self.beam_side_doublespin.setDecimals(1)  # Ensure only 1 decimal place
+        self.beam_side_doublespin.setSingleStep(0.1)
+        self.beam_side_doublespin.setDecimals(1)
         self.beam_side_doublespin.setValue(0.5)
         self.beam_side_doublespin.setToolTip(
             "higher = better accuracy, but slower processing")
 
+        # Set chunk duration
         self.chunk_duration_label = QtWidgets.QLabel("Chunk Duration:")
         self.chunk_duration_spinbox = QtWidgets.QSpinBox()
         self.chunk_duration_spinbox.setRange(100, 600)
         self.chunk_duration_spinbox.setSingleStep(1)
         self.chunk_duration_spinbox.setValue(400)
-        self.chunk_duration_spinbox.setToolTip("Select a chunk value between 400 and 500")
+        self.chunk_duration_spinbox.setToolTip(
+            "Select a chunk value between 100 and 600")
 
         # Progress bar
         self.progress_bar = QtWidgets.QProgressBar()
@@ -67,21 +80,25 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.launch_button = QtWidgets.QPushButton("Launch")
         self.launch_button.clicked.connect(self.launch_processing)
 
-        layout.addWidget(self.select_button)
-        layout.addWidget(self.file_label)
-        layout.addWidget(self.language_label)
-        layout.addWidget(self.language_combo)
-        layout.addWidget(self.model_label)
-        layout.addWidget(self.model_quality)
-        layout.addWidget(self.beam_size_label)
-        layout.addWidget(self.beam_side_doublespin)
-        layout.addWidget(self.temperature_label)
-        layout.addWidget(self.temperature_doublespin)
-        layout.addWidget(self.chunk_duration_label)
-        layout.addWidget(self.chunk_duration_spinbox)
-        layout.addWidget(self.progress_bar)
-        layout.addWidget(self.launch_button)
-        self.setLayout(layout)
+        self.settings_container.layout().addWidget(self.beam_size_label)
+        self.settings_container.layout().addWidget(self.beam_side_doublespin)
+        self.settings_container.layout().addWidget(self.temperature_label)
+        self.settings_container.layout().addWidget(self.temperature_doublespin)
+        self.settings_container.layout().addWidget(self.chunk_duration_label)
+        self.settings_container.layout().addWidget(self.chunk_duration_spinbox)
+
+
+        self.main_layout.addWidget(self.select_button)
+        self.main_layout.addWidget(self.file_label)
+        self.main_layout.addWidget(self.language_label)
+        self.main_layout.addWidget(self.language_combo)
+        self.main_layout.addWidget(self.model_label)
+        self.main_layout.addWidget(self.model_version)
+        self.main_layout.addWidget(self.show_settings_checkbox)
+        self.main_layout.addWidget(self.settings_container)
+        self.main_layout.addWidget(self.progress_bar)
+        self.main_layout.addWidget(self.launch_button)
+        self.setLayout(self.main_layout)
 
     def select_video(self):
         file_dialog = QtWidgets.QFileDialog()
@@ -100,7 +117,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
         """
         input_file = self.file_label.text()
         selected_language = self.language_combo.currentText()
-        model_size = self.model_quality.currentText()
+        model_size = self.model_version.currentText()
 
         if input_file == "No file selected":
             self.file_label.setText("Please select a video file!")
@@ -117,12 +134,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
         elif selected_language == "French":
             mode = "transcribe"
             lang_target = "fr"  # Translate to French
-        elif selected_language == "Dutch":
-            mode = "transcribe"
-            lang_target = "nl"  # Translate to Dutch
-        else:
-            self.file_label.setText("Unsupported language!")
-            return
+
         beam_size = self.beam_side_doublespin.value()
         temperature = self.temperature_doublespin.value()
         chunk_duration = self.chunk_duration_spinbox.value()
@@ -138,6 +150,10 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.worker.progress.connect(self.update_progress)
         self.worker.finished.connect(self.transcription_complete)
         self.worker.start()
+
+    def toggle_settings(self, state):
+        self.settings_container.setVisible(state == 2)
+        self.adjustSize()
 
     def update_progress(self, value):
         """Update the progress bar value."""

@@ -1,71 +1,82 @@
-import os
 import re
-from deep_translator import GoogleTranslator
+from langdetect import detect
+from argostranslate import package
+from argostranslate import translate
 
 
-def translate_srt(input_srt, target_lang):
+def install_translation_model(from_code="en", to_code="fr"):
+    """Ensure the Argos Translate model is installed."""
+    try:
+        installed = [
+            lang.code for lang in translate.get_installed_languages()]
+        if from_code in installed and to_code in installed:
+            print("Translation model already installed.")
+            return
+
+        print(f"Checking for {from_code} → {to_code} model...")
+        package.update_package_index()
+        available = package.get_available_packages()
+
+        model = next(
+            (p for p in available if p.from_code == from_code and
+             p.to_code == to_code), None)
+
+        if not model:
+            print(f"No model found for {from_code} → {to_code}.")
+            return
+
+        print(f"Downloading and installing {from_code} → {to_code}...")
+        package.install_from_path(model.download())
+        print("Model installed successfully.")
+
+    except Exception as e:
+        print(f"Error installing model: {e}")
+
+
+def detect_language(text):
+    """Detect the language of a given text using langdetect."""
+    return detect(text)
+
+
+def translate_srt(input_srt, tgt_lang="fr"):
     """
-    Translates an SRT file into a target language.
-
-    Args:
-        input_srt (str): Path to the original SRT file.
-        target_lang (str): Target language code
-            (e.g., "fr" for French, "de" for German).
-
-    Returns:
-        str: Path to the translated SRT file.
+    Translate an SRT file while preserving timestamps and auto-detecting
+    the input language.
     """
-
-    # Extract base filename and construct output filename
-    base_name, _ = os.path.splitext(input_srt)
-    output_srt = f"{base_name}_{target_lang}.srt"
-
-    # Read the content of the file for language detection
     with open(input_srt, "r", encoding="utf-8") as file:
-        srt_lines = file.readlines()
-        # Use first 500 characters for detection
-        srt_content = " ".join(srt_lines)[:500]
+        lines = file.readlines()
 
-    # Initialize translator
-    translator = GoogleTranslator(source="auto", target=target_lang)
+    # Detect source language from the first non-empty subtitle line
+    sample = next((l.strip() for l in lines if l.strip()
+                   and not re.match(r'^\d+$', l)
+                   and not re.match(
+                       r'^\d{2}:\d{2}:\d{2},\d{3} --> '
+                       r'\d{2}:\d{2}:\d{2},\d{3}', l)), "English")
 
-    # Detect language from the file content
-    detected_lang = translator.detect(srt_content)
+    try:
+        src_lang = detect_language(sample)
+        print(f"Detected language: {src_lang} → Translating to: {tgt_lang}")
+    except Exception as e:
+        print(f"Language detection failed: {e}")
+        return
 
-    # If source and target languages are the same, copy file without
-    # translation
-    if detected_lang == target_lang:
-        os.rename(input_srt, output_srt)
-        print(f"Source and target languages are the same. File copied: {output_srt}")
-        return output_srt
+    install_translation_model(src_lang, tgt_lang)
 
-    translated_lines = []
-    buffer = []  # Temporary storage for subtitle text lines
-
-    for line in srt_lines:
-        line = line.strip()  # Remove extra whitespace
-
-        # If it's a subtitle index or timestamp, keep it unchanged
-        if re.match(r"^\d+$", line) or "-->" in line:
-            if buffer:  # Translate buffered text before a new subtitle block
-                translated_text = translator.translate(" ".join(buffer))
-                translated_lines.append(translated_text)
-                buffer = []  # Clear buffer
-
-            translated_lines.append(line)  # Keep timestamps/index unchanged
-        elif line == "":  # Empty line means end of subtitle block
-            if buffer:
-                translated_text = translator.translate(" ".join(buffer))
-                translated_lines.append(translated_text)
-                buffer = []  # Clear buffer
-            translated_lines.append("")  # Keep empty line for formatting
+    translated = []
+    for line in lines:
+        if re.match(r'^\d+$', line) or re.match(
+                r'^\d{2}:\d{2}:\d{2},\d{3} --> '
+                r'\d{2}:\d{2}:\d{2},\d{3}', line):
+            translated.append(line)
+        elif line.strip() == "":
+            translated.append(line)
         else:
-            buffer.append(line)  # Collect subtitle text for translation
+            translated.append(
+                translate.translate(line.strip(), src_lang, tgt_lang) + "\n"
+            )
 
-    # Write translated SRT file
+    output_srt = input_srt.replace(".srt", f"_{tgt_lang}.srt")
     with open(output_srt, "w", encoding="utf-8") as file:
-        file.write("\n".join(translated_lines))
+        file.writelines(translated)
 
-    # os.remove(input_srt)
-    print(f"Translated SRT file saved: {output_srt}")
-    return output_srt
+    print(f"Translated SRT saved as {output_srt}")
