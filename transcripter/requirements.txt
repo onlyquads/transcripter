@@ -4,8 +4,8 @@ Shiboken6==6.5.0
 deep-translator
 openai-whisper
 
-# PyTorch with CUDA 12.1 (BEST for RTX 2080 Ti)
+# Force PyTorch to install CUDA 12.1 version
 --extra-index-url https://download.pytorch.org/whl/cu121
-torch
-torchaudio
-torchvision
+torch==2.1.0+cu121
+torchaudio==2.1.0+cu121
+torchvision==0.16.0+cu121

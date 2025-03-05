@@ -1,6 +1,6 @@
 import os
-import whisper
 import torch
+import whisper
 
 def transcript(
     input_file,

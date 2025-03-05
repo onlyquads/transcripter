@@ -1,7 +1,7 @@
 import os
-import urllib.request
 import zipfile
 import subprocess
+import urllib.request
 
 
 def get_ffmpeg_path():
