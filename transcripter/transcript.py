@@ -1,10 +1,12 @@
 import os
 import torch
 import whisper
+import tempfile
+
 
 def transcript(
     input_file,
-    mode="translate",
+    mode="transcribe",
     model_size="base",
     language=None,
     beam_size=5,
@@ -12,26 +14,14 @@ def transcript(
     word_timestamps=False,
     fp16=None,
     progress_callback=None,
+    chunk_start_time=0  # New parameter for time offset
 ):
     """
     Transcribes or translates an audio file and generates an SRT file.
 
-    Parameters:
-    - input_file (str): Path to the input audio file.
-    - mode (str): "translate" (English translation) or "transcribe" (original language).
-    - model_size (str): Whisper model size to use ("tiny", "base", "small", "medium", "large", "large-v2", "large-v3").
-    - language (str): Language code (e.g., "fr" for French). If None, Whisper auto-detects.
-    - beam_size (int): Beam search size for better accuracy.
-    - temperature (float): Decoding randomness (0.0 = deterministic, higher values allow variations).
-    - word_timestamps (bool): Enables word-level timestamps.
-    - fp16 (bool): Use mixed precision for faster CUDA inference (None = auto-detect).
-    - progress_callback (function): Function to update the progress bar in UI.
-
-    Returns:
-    - str: Path to the generated SRT file or None if an error occurs.
+    - chunk_start_time (int): The starting timestamp of this chunk in seconds.
     """
 
-    # Ensure FFmpeg is correctly set
     ffmpeg_path = os.environ.get("FFMPEG")
     if not ffmpeg_path or not os.path.exists(ffmpeg_path):
         raise FileNotFoundError("FFmpeg not found! Ensure FFmpeg is installed and set in environment variables.")
@@ -73,13 +63,13 @@ def transcript(
         if progress_callback:
             progress_callback(20)
 
-        # Convert to SRT format
+        # Convert to SRT format with time adjustments
         srt_content = ""
         total_segments = len(result["segments"])
 
         for i, segment in enumerate(result["segments"]):
-            start_time = segment["start"]
-            end_time = segment["end"]
+            start_time = segment["start"] + chunk_start_time  # Apply offset
+            end_time = segment["end"] + chunk_start_time  # Apply offset
             text = segment["text"]
 
             # Format timestamps (HH:MM:SS,mmm)
@@ -93,16 +83,14 @@ def transcript(
             if progress_callback:
                 progress_callback(int(((i + 1) / total_segments) * 80) + 10)
 
-        # Save as an SRT file
-        parent_dir = os.path.dirname(input_file)
+        # Save as an SRT file in the system's temp folder
+        temp_srt_dir = tempfile.gettempdir()
         input_file_name = os.path.basename(input_file)
         input_file_name_without_ext = os.path.splitext(input_file_name)[0]
-        srt_file = f"{parent_dir}/{input_file_name_without_ext}.srt"
+        srt_file = os.path.join(
+            temp_srt_dir, f"{input_file_name_without_ext}.srt")
 
-        if mode == "translate":
-            srt_file = f"{parent_dir}/{input_file_name_without_ext}_en.srt"
-
-        print(f"Translated SRT file created: {srt_file}")
+        print(f">>> Saving temporary SRT file: {srt_file}")
 
         with open(srt_file, "w", encoding="utf-8") as f:
             f.write(srt_content)
@@ -111,7 +99,7 @@ def transcript(
         if progress_callback:
             progress_callback(100)
 
-        return srt_file
+        return srt_file  # Return path to the generated SRT file
 
     except Exception as e:
         print(f"Error during transcription: {e}")

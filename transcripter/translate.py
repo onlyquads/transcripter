@@ -62,6 +62,6 @@ def translate_srt(input_srt, target_lang):
     with open(output_srt, "w", encoding="utf-8") as file:
         file.write("\n".join(translated_lines))
 
-    os.remove(input_srt)
+    # os.remove(input_srt)
     print(f"Translated SRT file saved: {output_srt}")
     return output_srt
