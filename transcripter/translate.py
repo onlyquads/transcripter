@@ -13,7 +13,7 @@ def install_translation_model(from_code="en", to_code="fr"):
             print("Translation model already installed.")
             return
 
-        print(f"Checking for {from_code} → {to_code} model...")
+        print(f"Checking for {from_code} -> {to_code} model...")
         package.update_package_index()
         available = package.get_available_packages()
 
@@ -22,10 +22,10 @@ def install_translation_model(from_code="en", to_code="fr"):
              p.to_code == to_code), None)
 
         if not model:
-            print(f"No model found for {from_code} → {to_code}.")
+            print(f"No model found for {from_code} -> {to_code}.")
             return
 
-        print(f"Downloading and installing {from_code} → {to_code}...")
+        print(f"Downloading and installing {from_code} -> {to_code}...")
         package.install_from_path(model.download())
         print("Model installed successfully.")
 
@@ -41,7 +41,8 @@ def detect_language(text):
 def translate_srt(input_srt, tgt_lang="fr"):
     """
     Translate an SRT file while preserving timestamps and auto-detecting
-    the input language.
+    the input language. Skips translation if source and target languages
+    are the same.
     """
     with open(input_srt, "r", encoding="utf-8") as file:
         lines = file.readlines()
@@ -55,9 +56,15 @@ def translate_srt(input_srt, tgt_lang="fr"):
 
     try:
         src_lang = detect_language(sample)
-        print(f"Detected language: {src_lang} → Translating to: {tgt_lang}")
+        print(f"Detected language: {src_lang} -> Translating to: {tgt_lang}")
     except Exception as e:
         print(f"Language detection failed: {e}")
+        return
+
+    # Skip translation if source and target languages are the same
+    if src_lang == tgt_lang:
+        print(
+            "Source and target languages are the same. Skipping translation.")
         return
 
     install_translation_model(src_lang, tgt_lang)

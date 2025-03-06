@@ -23,12 +23,12 @@ class TranscriptionWorker(QtCore.QThread):
         beam_size: int,
         temperature: float,
         chunk_duration: int,
-        language: str = None,
+        target_language: str = None,
     ):
         super().__init__()
         self.file_path = file_path
         self.mode = mode
-        self.language = language
+        self.target_language = target_language
         self.model_size = model_size
         self.beam_size = beam_size
         self.temperature = temperature
@@ -49,7 +49,7 @@ class TranscriptionWorker(QtCore.QThread):
         temp_srt_files = self.process_chunks(video_chunks)
         final_srt = self.merge_srt_files(temp_srt_files)
 
-        if self.language:
+        if self.target_language != "English":
             self.translate_srt(final_srt)
 
         self.cleanup(temp_srt_files)
@@ -94,16 +94,18 @@ class TranscriptionWorker(QtCore.QThread):
         Merges temporary SRT files into a final output file.
         """
         self.update_progress(80)
-        return subtitles.merge_srt_files(temp_srt_files, self.file_path)
+        return subtitles.merge_srt_files(
+            temp_srt_files,
+            self.file_path,
+            self.target_language)
 
     def translate_srt(self, srt_file: str):
         """
         Translates the SRT file if a language is specified.
         """
         self.update_progress(90)
-        # translate.translate_srt(srt_file, self.language)
         print('Launch translation')
-        translate.translate_srt(srt_file, self.language)
+        translate.translate_srt(srt_file, self.target_language)
 
     def cleanup(self, temp_srt_files: list):
         """

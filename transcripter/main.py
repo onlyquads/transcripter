@@ -61,7 +61,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.beam_side_doublespin = QtWidgets.QDoubleSpinBox()
         self.beam_side_doublespin.setSingleStep(0.1)
         self.beam_side_doublespin.setDecimals(1)
-        self.beam_side_doublespin.setValue(0.5)
+        self.beam_side_doublespin.setValue(0.8)
         self.beam_side_doublespin.setToolTip(
             "higher = better accuracy, but slower processing")
 
@@ -70,7 +70,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.chunk_duration_spinbox = QtWidgets.QSpinBox()
         self.chunk_duration_spinbox.setRange(100, 600)
         self.chunk_duration_spinbox.setSingleStep(1)
-        self.chunk_duration_spinbox.setValue(400)
+        self.chunk_duration_spinbox.setValue(300)
         self.chunk_duration_spinbox.setToolTip(
             "Select a chunk value between 100 and 600")
 
@@ -131,7 +131,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
         # Determine processing mode
         if selected_language == "English":
             mode = "translate"
-            lang_target = None  # No extra translation needed
+            lang_target = "en"  # No extra translation needed
         elif selected_language == "French":
             mode = "transcribe"
             lang_target = "fr"  # Translate to French
@@ -147,7 +147,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
             beam_size=beam_size,
             temperature=temperature,
             chunk_duration=chunk_duration,
-            language=lang_target)
+            target_language=lang_target)
         self.worker.progress.connect(self.update_progress)
         self.worker.finished.connect(self.transcription_complete)
         self.worker.start()

@@ -1,7 +1,7 @@
 import os
 
 
-def merge_srt_files(srt_files, original_video_path):
+def merge_srt_files(srt_files, original_video_path, target_language):
     """
     Merges multiple SRT files into a single final SRT file.
 
@@ -13,9 +13,12 @@ def merge_srt_files(srt_files, original_video_path):
     - str: Path to the final merged SRT file.
     """
 
+    original_video_base_name = os.path.splitext(
+        os.path.basename(original_video_path))[0]
+
     merged_srt_path = os.path.join(
         os.path.dirname(original_video_path),
-        f"{os.path.splitext(os.path.basename(original_video_path))[0]}.srt"
+        f"{original_video_base_name}.{target_language}.srt"
     )
 
     subtitle_index = 1  # Counter for subtitles
@@ -29,7 +32,6 @@ def merge_srt_files(srt_files, original_video_path):
 
             for line in lines:
                 line = line.strip()
-
                 if line.isdigit():  # Subtitle index
                     if subtitle_block:
                         outfile.write(
