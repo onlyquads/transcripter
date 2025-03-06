@@ -1,7 +1,14 @@
 import re
+import os
 from langdetect import detect
 from argostranslate import package
 from argostranslate import translate
+from transcripter import paths
+
+LANGUAGE_CODES = {
+    "English": "en",
+    "French": "fr"
+}
 
 
 def install_translation_model(from_code="en", to_code="fr"):
@@ -38,7 +45,7 @@ def detect_language(text):
     return detect(text)
 
 
-def translate_srt(input_srt, tgt_lang="fr"):
+def translate_srt(input_file, input_srt, target_language="fr"):
     """
     Translate an SRT file while preserving timestamps and auto-detecting
     the input language. Skips translation if source and target languages
@@ -56,18 +63,20 @@ def translate_srt(input_srt, tgt_lang="fr"):
 
     try:
         src_lang = detect_language(sample)
-        print(f"Detected language: {src_lang} -> Translating to: {tgt_lang}")
+        print(
+            f"Detected language: {src_lang} -> "
+            f"Translating to: {target_language}")
     except Exception as e:
         print(f"Language detection failed: {e}")
         return
 
     # Skip translation if source and target languages are the same
-    if src_lang == tgt_lang:
+    if src_lang == target_language:
         print(
             "Source and target languages are the same. Skipping translation.")
         return
 
-    install_translation_model(src_lang, tgt_lang)
+    install_translation_model(src_lang, target_language)
 
     translated = []
     for line in lines:
@@ -79,10 +88,15 @@ def translate_srt(input_srt, tgt_lang="fr"):
             translated.append(line)
         else:
             translated.append(
-                translate.translate(line.strip(), src_lang, tgt_lang) + "\n"
+                translate.translate(
+                    line.strip(),
+                    src_lang,
+                    target_language) + "\n"
             )
+    file_basename, file_dirname = paths.get_filename_without_ext(input_file)
+    output_srt_filename = f"{file_basename}.{target_language}.srt"
+    output_srt = os.path.join(file_dirname, output_srt_filename)
 
-    output_srt = input_srt.replace(".srt", f"_{tgt_lang}.srt")
     with open(output_srt, "w", encoding="utf-8") as file:
         file.writelines(translated)
 

@@ -19,24 +19,30 @@ def transcript(
     word_timestamps=False,
     fp16=None,
     progress_callback=None,
-    chunk_start_time=0  # New parameter for time offset
+    chunk_start_time=0,  # New parameter for time offset
+    compression_ratio_threshold=2.4,
 ):
     """
     Transcribes or translates an audio file and generates an SRT file.
     Parameters:
     - input_file (str): Path to the input audio file.
-    - mode (str): "translate" (English translation) or "transcribe" (original language).
-    - model_size (str): Whisper model size to use ("tiny", "base", "small", "medium", "large", "large-v2", "large-v3").
-    - language (str): Language code (e.g., "fr" for French). If None, Whisper auto-detects.
+    - mode (str): "translate" (English translation) or "transcribe"
+        (original language).
+    - model_size (str): Whisper model size to use ("tiny", "base", "small",
+        "medium", "large", "large-v2", "large-v3").
+    - language (str): Language code (e.g., "fr" for French). If None,
+        Whisper auto-detects.
     - beam_size (int): Beam search size for better accuracy.
-    - temperature (float): Decoding randomness (0.0 = deterministic, higher values allow variations).
+    - temperature (float): Decoding randomness (0.0 = deterministic,
+        higher values allow variations).
     - word_timestamps (bool): Enables word-level timestamps.
-    - fp16 (bool): Use mixed precision for faster CUDA inference (None = auto-detect).
+    - fp16 (bool): Use mixed precision for faster CUDA inference
+        (None = auto-detect).
     - progress_callback (function): Function to update the progress bar in UI.
-
+    - compression_ratio_threshold : lower this if text chunks are too big
     - chunk_start_time (int): The starting timestamp of this chunk in seconds.
-    """
 
+    """
 
     try:
         # Select device (CUDA if available, otherwise CPU)
@@ -58,7 +64,7 @@ def transcript(
             progress_callback(5)
 
         # Transcribe or translate
-        print(">>> Transcription in progress...")
+        print("Transcription in progress...")
         result = model.transcribe(
             input_file,
             task=mode,
@@ -67,6 +73,7 @@ def transcript(
             temperature=temperature,
             word_timestamps=word_timestamps,
             fp16=fp16,
+            compression_ratio_threshold=compression_ratio_threshold,
         )
 
         # Emit progress: Transcription started
@@ -83,11 +90,22 @@ def transcript(
             text = segment["text"]
 
             # Format timestamps (HH:MM:SS,mmm)
-            start_time_srt = f"{int(start_time // 3600):02}:{int((start_time % 3600) // 60):02}:{int(start_time % 60):02},{int((start_time % 1) * 1000):03}"
-            end_time_srt = f"{int(end_time // 3600):02}:{int((end_time % 3600) // 60):02}:{int(end_time % 60):02},{int((end_time % 1) * 1000):03}"
+            start_time_srt = (
+                f"{int(start_time // 3600):02}:"
+                f"{int((start_time % 3600) // 60):02}:"
+                f"{int(start_time % 60):02},"
+                f"{int((start_time % 1) * 1000):03}"
+            )
+            end_time_srt = (
+                f"{int(end_time // 3600):02}:"
+                f"{int((end_time % 3600) // 60):02}:"
+                f"{int(end_time % 60):02},"
+                f"{int((end_time % 1) * 1000):03}"
+            )
 
             # Append to SRT file format
-            srt_content += f"{i+1}\n{start_time_srt} --> {end_time_srt}\n{text}\n\n"
+            srt_content += (
+                f"{i+1}\n{start_time_srt} --> {end_time_srt}\n{text}\n\n")
 
             # Update progress
             if progress_callback:

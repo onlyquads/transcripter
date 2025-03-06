@@ -5,6 +5,67 @@ import subprocess
 import urllib.request
 
 
+def split_video_into_chunks(input_video, chunk_duration=400):
+    """
+    Splits a video into smaller chunks (default: 15 minutes max per chunk)
+    and stores them in the Windows temp folder.
+
+    Parameters:
+    - input_video (str): Path to the input video file.
+    - chunk_duration (int): Maximum duration per chunk in seconds
+    (default: 400s = 5 minutes).
+
+    Returns:
+    - List of chunked video file paths stored in the temp folder.
+    """
+
+    # Get system temp folder
+    temp_dir = tempfile.gettempdir()
+
+    # Extract filename and extension
+    input_file_name = os.path.basename(input_video)
+    input_file_name_without_ext, ext = os.path.splitext(input_file_name)
+
+    # Define output file pattern inside temp folder
+    output_pattern = os.path.join(
+        temp_dir, f"{input_file_name_without_ext}_chunk_%03d{ext}")
+
+    ffmpeg_path = os.environ["FFMPEG"]
+    # FFmpeg command to split the video
+    command = [
+        ffmpeg_path,
+        "-i", input_video,  # Input file
+        "-c", "copy",  # Keep original quality
+        "-map", "0",  # Copy all streams (audio, video)
+        "-f", "segment",  # Enable segmenting
+        "-segment_time", str(chunk_duration),  # Split every 900s (15min)
+        "-copyts",  # Preserve original timestamps
+        output_pattern  # Output file pattern
+    ]
+
+    try:
+        print(
+            f">>> Splitting {input_video} into chunks in TEMP folder...")
+        subprocess.run(command, check=False)
+
+        # Collect chunked files
+        chunk_files = sorted([
+            os.path.join(temp_dir, f)
+            for f in os.listdir(temp_dir)
+            if f.startswith(
+                f"{input_file_name_without_ext}_chunk_") and f.endswith(ext)
+        ])
+
+        print(
+            ">>> Successfully created "
+            f"{len(chunk_files)} chunks in {temp_dir}.")
+        return chunk_files
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error splitting video: {e}")
+        return []
+
+
 def get_ffmpeg_path():
     """
     Check if FFmpeg is already installed in the custom path and return
@@ -43,7 +104,6 @@ def add_ffmpeg_to_path():
     os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
     # Ensure Whisper can access FFmpeg
     os.environ["FFMPEG_BINARY"] = ffmpeg_path
-
 
 
 def install_ffmpeg():
@@ -108,61 +168,3 @@ def install_ffmpeg():
         return None
 
 
-def split_video_into_chunks(input_video, chunk_duration=400):
-    """
-    Splits a video into smaller chunks (default: 15 minutes max per chunk)
-    and stores them in the Windows temp folder.
-
-    Parameters:
-    - input_video (str): Path to the input video file.
-    - chunk_duration (int): Maximum duration per chunk in seconds
-    (default: 400s = 5 minutes).
-
-    Returns:
-    - List of chunked video file paths stored in the temp folder.
-    """
-
-    # Get system temp folder
-    temp_dir = tempfile.gettempdir()
-
-    # Extract filename and extension
-    input_file_name = os.path.basename(input_video)
-    input_file_name_without_ext, ext = os.path.splitext(input_file_name)
-
-    # Define output file pattern inside temp folder
-    output_pattern = os.path.join(
-        temp_dir, f"{input_file_name_without_ext}_chunk_%03d{ext}")
-
-    ffmpeg_path = os.environ["FFMPEG"]
-    # FFmpeg command to split the video
-    command = [
-        ffmpeg_path,
-        "-i", input_video,  # Input file
-        "-c", "copy",  # Keep original quality
-        "-map", "0",  # Copy all streams (audio, video)
-        "-f", "segment",  # Enable segmenting
-        "-segment_time", str(chunk_duration),  # Split every 900s (15min)
-        "-copyts",  # Preserve original timestamps
-        output_pattern  # Output file pattern
-    ]
-
-    try:
-        print(
-            f">>> Splitting {input_video} into chunks in TEMP folder...")
-        subprocess.run(command, check=False)
-
-        # Collect chunked files
-        chunk_files = sorted([
-            os.path.join(temp_dir, f)
-            for f in os.listdir(temp_dir)
-            if f.startswith(
-                f"{input_file_name_without_ext}_chunk_") and f.endswith(ext)
-        ])
-
-        print(
-            f">>> Successfully created {len(chunk_files)} chunks in {temp_dir}.")
-        return chunk_files
-
-    except subprocess.CalledProcessError as e:
-        print(f"Error splitting video: {e}")
-        return []

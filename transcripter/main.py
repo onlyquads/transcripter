@@ -1,8 +1,29 @@
 import sys
 from PySide6 import QtWidgets
+from PySide6 import QtGui
 
 from transcripter import thread
 from transcripter import ffmpeg
+from transcripter import translate
+
+
+TOOLNAME = "Video to srt"
+VERSION = "version b0.1"
+
+# Settings Names
+SETTING_NAMES_MODEL = ["base", "medium", "large"]
+SETTING_NAME_BEAM_SIZE = "Beam Size"
+SETTING_NAME_TEMPERATURE = "Temperature"
+SETTING_NAME_COMPRESSION_RATIO = "Compression Ratio"
+SETTING_NAME_CHUNK_DURATION = "Chunk Duration"
+
+# Default settings
+SETTING_MODEL = SETTING_NAMES_MODEL[1]
+SETTING_BEAM_SIZE = 0.8
+SETTING_TEMPERATURE = 0.1
+SETTING_COMPRESSION_RATIO = 2.40
+SETTING_CHUNK_DURATION = 300
+
 
 
 class VideoTranscriptor(QtWidgets.QWidget):
@@ -13,7 +34,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("Video Transcriptor")
+        self.setWindowTitle(TOOLNAME)
         self.setGeometry(100, 100, 200, 250)
 
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -37,40 +58,59 @@ class VideoTranscriptor(QtWidgets.QWidget):
         # Select whisper model to use
         self.model_label = QtWidgets.QLabel("Select Whisper model:")
         self.model_version = QtWidgets.QComboBox()
-        self.model_version.addItems(["base", "medium", "large"])
+        self.model_version.addItems(SETTING_NAMES_MODEL)
+        self.model_version.setCurrentText(SETTING_MODEL)
         self.model_version.setToolTip(
             "Select the Whisper model. The better the slower")
+
+        # Add force new transcibe checkbox
+        self.force_new_transcribe_checkbox = QtWidgets.QCheckBox(
+            "Force new srt")
+        self.force_new_transcribe_checkbox.setChecked(True)
+
 
         # Add setting checkbox
         self.show_settings_checkbox = QtWidgets.QCheckBox("Settings")
         self.show_settings_checkbox.setChecked(False)
         self.show_settings_checkbox.stateChanged.connect(
             self.toggle_settings)
-        # Set model temperature
-        self.temperature_label = QtWidgets.QLabel("Temperature:")
-
-        self.temperature_doublespin = QtWidgets.QDoubleSpinBox()
-        self.temperature_doublespin.setSingleStep(0.1)
-        self.temperature_doublespin.setDecimals(1)
-        self.temperature_doublespin.setValue(0.1)
-        self.temperature_doublespin.setToolTip(
-            "higher value = more random output, lower = more deterministic")
 
         # Set model beam_size
-        self.beam_size_label = QtWidgets.QLabel("Beam Size:")
+        self.beam_size_label = QtWidgets.QLabel(f"{SETTING_NAME_BEAM_SIZE}:")
         self.beam_side_doublespin = QtWidgets.QDoubleSpinBox()
         self.beam_side_doublespin.setSingleStep(0.1)
         self.beam_side_doublespin.setDecimals(1)
-        self.beam_side_doublespin.setValue(0.8)
+        self.beam_side_doublespin.setValue(SETTING_BEAM_SIZE)
         self.beam_side_doublespin.setToolTip(
             "higher = better accuracy, but slower processing")
 
+        # Set model temperature
+        self.temperature_label = QtWidgets.QLabel(f"{SETTING_NAME_TEMPERATURE}:")
+        self.temperature_doublespin = QtWidgets.QDoubleSpinBox()
+        self.temperature_doublespin.setSingleStep(0.1)
+        self.temperature_doublespin.setDecimals(1)
+        self.temperature_doublespin.setValue(SETTING_TEMPERATURE)
+        self.temperature_doublespin.setToolTip(
+            "higher value = more random output, lower = more deterministic")
+
+        # Compression ratio threshold
+        self.compression_ratio_threshold_label = QtWidgets.QLabel(
+            f'{SETTING_NAME_COMPRESSION_RATIO}:')
+        self.compression_ratio_threshold_spinbox = QtWidgets.QDoubleSpinBox()
+        self.compression_ratio_threshold_spinbox.setRange(1, 5)
+        self.compression_ratio_threshold_spinbox.setSingleStep(0.1)
+        self.compression_ratio_threshold_spinbox.setValue(
+            SETTING_COMPRESSION_RATIO)
+        self.compression_ratio_threshold_spinbox.setToolTip(
+            "Lower this if too much text lines")
+
         # Set chunk duration
-        self.chunk_duration_label = QtWidgets.QLabel("Chunk Duration:")
+        self.chunk_duration_label = QtWidgets.QLabel(
+            f"{SETTING_NAME_CHUNK_DURATION}:")
         self.chunk_duration_spinbox = QtWidgets.QSpinBox()
         self.chunk_duration_spinbox.setRange(100, 600)
         self.chunk_duration_spinbox.setSingleStep(1)
-        self.chunk_duration_spinbox.setValue(300)
+        self.chunk_duration_spinbox.setValue(SETTING_CHUNK_DURATION)
         self.chunk_duration_spinbox.setToolTip(
             "Select a chunk value between 100 and 600")
 
@@ -82,10 +122,18 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.launch_button = QtWidgets.QPushButton("Launch")
         self.launch_button.clicked.connect(self.launch_processing)
 
+        # Version info
+        version_info = QtWidgets.QLabel(VERSION)
+        version_info.setFont(QtGui.QFont("Arial", 8))
+
         self.settings_container.layout().addWidget(self.beam_size_label)
         self.settings_container.layout().addWidget(self.beam_side_doublespin)
         self.settings_container.layout().addWidget(self.temperature_label)
         self.settings_container.layout().addWidget(self.temperature_doublespin)
+        self.settings_container.layout().addWidget(
+            self.compression_ratio_threshold_label)
+        self.settings_container.layout().addWidget(
+            self.compression_ratio_threshold_spinbox)
         self.settings_container.layout().addWidget(self.chunk_duration_label)
         self.settings_container.layout().addWidget(self.chunk_duration_spinbox)
 
@@ -95,10 +143,12 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.main_layout.addWidget(self.language_combo)
         self.main_layout.addWidget(self.model_label)
         self.main_layout.addWidget(self.model_version)
+        self.main_layout.addWidget(self.force_new_transcribe_checkbox)
         self.main_layout.addWidget(self.show_settings_checkbox)
         self.main_layout.addWidget(self.settings_container)
         self.main_layout.addWidget(self.progress_bar)
         self.main_layout.addWidget(self.launch_button)
+        self.main_layout.addWidget(version_info)
         self.setLayout(self.main_layout)
 
     def select_video(self):
@@ -121,7 +171,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
         model_size = self.model_version.currentText()
 
         if input_file == "No file selected":
-            self.file_label.setText("Please select a video file!")
+            self.file_label.setText("Please select a video file!!!")
             return
 
         # Reset UI for new processing task
@@ -129,16 +179,15 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.launch_button.setEnabled(False)
 
         # Determine processing mode
-        if selected_language == "English":
-            mode = "translate"
-            lang_target = "en"  # No extra translation needed
-        elif selected_language == "French":
-            mode = "transcribe"
-            lang_target = "fr"  # Translate to French
+        # if selected_language in translate.LANGUAGE_CODES:
+        lang_target = translate.LANGUAGE_CODES[selected_language]
+        mode = "translate" if lang_target == "en" else "transcribe"
 
         beam_size = self.beam_side_doublespin.value()
         temperature = self.temperature_doublespin.value()
         chunk_duration = self.chunk_duration_spinbox.value()
+        compression_threshold = self.compression_ratio_threshold_spinbox.value()
+        force_new_srt = self.force_new_transcribe_checkbox.isChecked()
         # Start worker thread
         self.worker = thread.TranscriptionWorker(
             file_path=input_file,
@@ -147,7 +196,9 @@ class VideoTranscriptor(QtWidgets.QWidget):
             beam_size=beam_size,
             temperature=temperature,
             chunk_duration=chunk_duration,
-            target_language=lang_target)
+            target_language=lang_target,
+            compression_threshold=compression_threshold,
+            force_new_srt=force_new_srt)
         self.worker.progress.connect(self.update_progress)
         self.worker.finished.connect(self.transcription_complete)
         self.worker.start()

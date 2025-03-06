@@ -8,6 +8,7 @@ from transcripter import translate
 from transcripter import transcribe
 
 
+
 class TranscriptionWorker(QtCore.QThread):
     """
     Worker thread for handling transcription without freezing the UI.
@@ -23,6 +24,8 @@ class TranscriptionWorker(QtCore.QThread):
         beam_size: int,
         temperature: float,
         chunk_duration: int,
+        compression_threshold: float,
+        force_new_srt: bool = True,
         target_language: str = None,
     ):
         super().__init__()
@@ -32,7 +35,9 @@ class TranscriptionWorker(QtCore.QThread):
         self.model_size = model_size
         self.beam_size = beam_size
         self.temperature = temperature
+        self.compression_threshold = compression_threshold
         self.chunk_duration = chunk_duration
+        self.force_new_srt = force_new_srt
 
     def run(self):
         """
@@ -40,19 +45,28 @@ class TranscriptionWorker(QtCore.QThread):
         """
         start_time = time.time()
         self.update_progress(5)
+        temp_srt_files = None
+        existing_subtitle_file = subtitles.srt_exists(
+            original_video_path=self.file_path)
 
-        video_chunks = self.split_video()
-        if not video_chunks:
-            self.finish("Error: Video chunking failed.", 0)
-            return
+        if not existing_subtitle_file or self.force_new_srt is True:
+            video_chunks = self.split_video()
+            if not video_chunks:
+                self.finish("Error: Video chunking failed.", 0)
+                return
 
-        temp_srt_files = self.process_chunks(video_chunks)
-        final_srt = self.merge_srt_files(temp_srt_files)
+            temp_srt_files = self.process_chunks(video_chunks)
+            final_srt = self.merge_srt_files(temp_srt_files)
 
-        if self.target_language != "English":
-            self.translate_srt(final_srt)
+        else:
+            # Bypass whisper transcription
+            final_srt = existing_subtitle_file
 
-        self.cleanup(temp_srt_files)
+        # if translate.LANGUAGE_CODES.get(self.target_language) != "en":
+        self.translate_srt(final_srt)
+
+        if temp_srt_files:
+            self.cleanup(temp_srt_files)
         self.finish(final_srt, time.time() - start_time)
 
     def split_video(self) -> list:
@@ -80,6 +94,7 @@ class TranscriptionWorker(QtCore.QThread):
                 model_size=self.model_size,
                 beam_size=self.beam_size,
                 temperature=self.temperature,
+                compression_ratio_threshold=self.compression_threshold,
                 chunk_start_time=chunk_start_time,
                 )
 
@@ -105,7 +120,7 @@ class TranscriptionWorker(QtCore.QThread):
         """
         self.update_progress(90)
         print('Launch translation')
-        translate.translate_srt(srt_file, self.target_language)
+        translate.translate_srt(self.file_path, srt_file, self.target_language)
 
     def cleanup(self, temp_srt_files: list):
         """
