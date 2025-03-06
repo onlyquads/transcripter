@@ -32,6 +32,20 @@ def get_ffmpeg_path():
         return ffmpeg_exe_path
 
 
+def add_ffmpeg_to_path():
+
+    ffmpeg_path = os.environ["FFMPEG"]
+    if not ffmpeg_path or not os.path.exists(ffmpeg_path):
+        raise FileNotFoundError(
+            "FFmpeg not found! Ensure FFmpeg is installed and set in environment variables.")
+
+    print(f'>>> FFmpeg found at {ffmpeg_path}')
+    os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
+    # Ensure Whisper can access FFmpeg
+    os.environ["FFMPEG_BINARY"] = ffmpeg_path
+
+
+
 def install_ffmpeg():
     """
     Download and install FFmpeg if not already installed, returning its path.
@@ -108,15 +122,6 @@ def split_video_into_chunks(input_video, chunk_duration=400):
     - List of chunked video file paths stored in the temp folder.
     """
 
-    ffmpeg_path = os.environ.get("FFMPEG")
-    if not ffmpeg_path or not os.path.exists(ffmpeg_path):
-        raise FileNotFoundError(
-            "FFmpeg not found!")
-
-    print(f'>>> FFMPEG FOUND {ffmpeg_path}')
-    os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
-    os.environ["FFMPEG_BINARY"] = ffmpeg_path
-
     # Get system temp folder
     temp_dir = tempfile.gettempdir()
 
@@ -128,22 +133,23 @@ def split_video_into_chunks(input_video, chunk_duration=400):
     output_pattern = os.path.join(
         temp_dir, f"{input_file_name_without_ext}_chunk_%03d{ext}")
 
+    ffmpeg_path = os.environ["FFMPEG"]
     # FFmpeg command to split the video
     command = [
         ffmpeg_path,
-        "-i", input_video,          # Input file
-        "-c", "copy",               # Keep original quality
-        "-map", "0",                # Copy all streams (audio, video)
-        "-f", "segment",            # Enable segmenting
+        "-i", input_video,  # Input file
+        "-c", "copy",  # Keep original quality
+        "-map", "0",  # Copy all streams (audio, video)
+        "-f", "segment",  # Enable segmenting
         "-segment_time", str(chunk_duration),  # Split every 900s (15min)
         "-copyts",  # Preserve original timestamps
-        output_pattern              # Output file pattern
+        output_pattern  # Output file pattern
     ]
 
     try:
         print(
             f">>> Splitting {input_video} into chunks in TEMP folder...")
-        subprocess.run(command, check=True)
+        subprocess.run(command, check=False)
 
         # Collect chunked files
         chunk_files = sorted([

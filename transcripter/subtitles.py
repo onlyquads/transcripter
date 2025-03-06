@@ -3,7 +3,7 @@ import os
 
 def merge_srt_files(srt_files, original_video_path):
     """
-    Merges multiple SRT files into one final SRT file.
+    Merges multiple SRT files into a single final SRT file.
 
     Parameters:
     - srt_files (list): List of SRT file paths to merge.
@@ -18,35 +18,34 @@ def merge_srt_files(srt_files, original_video_path):
         f"{os.path.splitext(os.path.basename(original_video_path))[0]}.srt"
     )
 
-    with open(merged_srt_path, "w", encoding="utf-8") as outfile:
-        srt_index = 1  # Subtitle numbering
+    subtitle_index = 1  # Counter for subtitles
 
+    with open(merged_srt_path, "w", encoding="utf-8") as outfile:
         for srt_file in srt_files:
             with open(srt_file, "r", encoding="utf-8") as infile:
-                srt_content = infile.readlines()
+                lines = infile.readlines()
 
-            buffer = []  # Store a single subtitle block
-            for line in srt_content:
+            subtitle_block = []
+
+            for line in lines:
                 line = line.strip()
 
                 if line.isdigit():  # Subtitle index
-                    if buffer:
-                        # Write the previous subtitle before starting a new one
+                    if subtitle_block:
                         outfile.write(
-                            f"{srt_index}\n" + "\n".join(buffer) + "\n\n")
-                        srt_index += 1
-                        buffer = []
-
+                            f"{subtitle_index}\n" + "\n".join(subtitle_block) + "\n\n")
+                        subtitle_index += 1
+                        subtitle_block = []
                 elif "-->" in line:  # Timestamp line
-                    buffer.append(line)
-
-                else:
-                    buffer.append(line)  # Subtitle text
+                    subtitle_block.append(line)
+                else:  # Subtitle text
+                    subtitle_block.append(line)
 
             # Write last subtitle block of the file
-            if buffer:
-                outfile.write(f"{srt_index}\n" + "\n".join(buffer) + "\n\n")
-                srt_index += 1
+            if subtitle_block:
+                outfile.write(
+                    f"{subtitle_index}\n" + "\n".join(subtitle_block) + "\n\n")
+                subtitle_index += 1
 
     print(f">>> Successfully merged subtitles into: {merged_srt_path}")
     return merged_srt_path

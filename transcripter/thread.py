@@ -85,7 +85,7 @@ class TranscriptionWorker(QtCore.QThread):
 
             if chunk_srt:
                 temp_srt_files.append(chunk_srt)
-            os.remove(chunk)  # Remove chunk after processing
+            os.remove(chunk)
 
         return temp_srt_files
 

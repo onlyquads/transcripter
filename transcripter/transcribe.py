@@ -4,6 +4,11 @@ import whisper
 import tempfile
 
 
+def load_whisper_model(model_size: str = "small"):
+    """Loads the Whisper model."""
+    return whisper.load_model(model_size)
+
+
 def transcript(
     input_file,
     mode="transcribe",
@@ -32,15 +37,6 @@ def transcript(
     - chunk_start_time (int): The starting timestamp of this chunk in seconds.
     """
 
-    ffmpeg_path = os.environ.get("FFMPEG")
-    if not ffmpeg_path or not os.path.exists(ffmpeg_path):
-        raise FileNotFoundError(
-            "FFmpeg not found! Ensure FFmpeg is installed and set in environment variables.")
-
-    print(f'>>> FFmpeg found at {ffmpeg_path}')
-    os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
-    # Ensure Whisper can access FFmpeg
-    os.environ["FFMPEG_BINARY"] = ffmpeg_path
 
     try:
         # Select device (CUDA if available, otherwise CPU)
@@ -105,7 +101,6 @@ def transcript(
             temp_srt_dir, f"{input_file_name_without_ext}.srt")
 
         print(f">>> Saving temporary SRT file: {srt_file}")
-
         with open(srt_file, "w", encoding="utf-8") as f:
             f.write(srt_content)
 

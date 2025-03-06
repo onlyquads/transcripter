@@ -2,11 +2,14 @@ import sys
 from PySide6 import QtWidgets
 
 from transcripter import thread
+from transcripter import ffmpeg
 
 
 class VideoTranscriptor(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
+        # Add ffmpeg to path
+        ffmpeg.add_ffmpeg_to_path()
         self.initUI()
 
     def initUI(self):
