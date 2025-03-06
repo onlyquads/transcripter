@@ -3,6 +3,7 @@ import torch
 import whisper
 import tempfile
 
+from transcripter import subtitles
 
 def load_whisper_model(model_size: str = "small"):
     """Loads the Whisper model."""
@@ -20,7 +21,7 @@ def transcript(
     fp16=None,
     progress_callback=None,
     chunk_start_time=0,  # New parameter for time offset
-    compression_ratio_threshold=2.4,
+    compression_ratio_threshold=2.0,
 ):
     """
     Transcribes or translates an audio file and generates an SRT file.
@@ -57,6 +58,8 @@ def transcript(
         print(f">>> Loading Whisper model: {model_size}...")
         print(f">>> using beam_size value: {beam_size}")
         print(f">>> using temperature value: {temperature}")
+        print(">>> using compression ratio value: "
+              f"{compression_ratio_threshold}")
         model = whisper.load_model(model_size).to(device)
 
         # Emit progress: model loaded
@@ -118,9 +121,7 @@ def transcript(
         srt_file = os.path.join(
             temp_srt_dir, f"{input_file_name_without_ext}.srt")
 
-        print(f">>> Saving temporary SRT file: {srt_file}")
-        with open(srt_file, "w", encoding="utf-8") as f:
-            f.write(srt_content)
+        srt_file = subtitles.save_srt(srt_file, srt_content)
 
         # Emit progress: Finalizing
         if progress_callback:

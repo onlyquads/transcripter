@@ -3,6 +3,7 @@ import os
 from langdetect import detect
 from argostranslate import package
 from argostranslate import translate
+
 from transcripter import paths
 
 LANGUAGE_CODES = {

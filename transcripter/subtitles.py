@@ -68,3 +68,10 @@ def merge_srt_files(srt_files, original_video_path, target_language):
 
     print(f">>> Successfully merged subtitles into: {merged_srt_path}")
     return merged_srt_path
+
+
+def save_srt(srt_file, srt_content):
+    print(f">>> Saving temporary SRT file: {srt_file}")
+    with open(srt_file, "w", encoding="utf-8") as f:
+        f.write(srt_content)
+    return srt_file
