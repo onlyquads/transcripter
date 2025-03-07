@@ -8,7 +8,6 @@ from transcripter import translate
 from transcripter import transcribe
 
 
-
 class TranscriptionWorker(QtCore.QThread):
     """
     Worker thread for handling transcription without freezing the UI.
