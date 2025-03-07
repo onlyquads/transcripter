@@ -8,7 +8,9 @@ from transcripter import paths
 
 LANGUAGE_CODES = {
     "English": "en",
-    "French": "fr"
+    "French": "fr",
+    "Spannish": "es",
+    "Portuguese": "pt"
 }
 
 

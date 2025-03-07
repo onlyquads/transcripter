@@ -53,7 +53,8 @@ class VideoTranscriptor(QtWidgets.QWidget):
         # Language selection dropdown
         self.language_label = QtWidgets.QLabel("Select Target Language:")
         self.language_combo = QtWidgets.QComboBox()
-        self.language_combo.addItems(["English", "French"])
+        self.language_combo.addItems((translate.LANGUAGE_CODES.keys()))
+        self.language_combo.setCurrentText(list(translate.LANGUAGE_CODES.keys())[0])
 
         # Select whisper model to use
         self.model_label = QtWidgets.QLabel("Select Whisper model:")
