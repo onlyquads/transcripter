@@ -1,23 +1,36 @@
-# Transcripter using FFmpeg and OpenAI-Whisper:
+# **Transcripter: Video to SRT using FFmpeg & OpenAI Whisper**
 
-This app lets you create .srt files from a video file using openAI's open source Whisper and
-eventually use argos_translate to translate the output srt in another language.
-Several settings are available to tweak the quality of the transcription.
+**Transcripter** is a tool that generates **.srt subtitle files** from video files using **OpenAI's Whisper** for transcription. It also supports **translation** via **Argos Translate** to convert subtitles into different languages.
 
-The app will download needed softwares (ffmpeg, PySide6, openAI's whisper, argos_translate and other dependencies)
-and install them inside a created venv
+The app provides several settings to fine-tune the **quality and accuracy** of transcriptions.
 
-# Requirements:
-Requires python 3.9.5 - 3.9.13
-Up to 5Go of free space if you use the large model.
-Cuda 12.2 for GPU compute, it will use CPU if no compatible GPU is found
+---
 
-For now it only works on Windows but I plan to support Apple Silicon.
+## **Features**
+ **Automatic Speech-to-Text**: Converts video audio into text with OpenAI Whisper.
+ **SRT Subtitle Generation**: Saves transcriptions in `.srt` format with proper timestamps.
+ **Multilingual Support**: Uses Argos Translate to translate subtitles into different languages.
+ **Customizable Settings**: Adjust model parameters for optimal transcription quality.
+ **Automatic Dependency Installation**: Downloads and sets up required software in a virtual environment.
 
+---
 
-# Installation:
-Copy the whole folder anywhere and execute 'launcher.py' with python.
-Note: Preferences will be stored in /users/USERNAME/documents/transcripter_prefs
+## **Requirements**
+- **Python**: `3.9.5 - 3.9.13`
+- **Storage**: Up to **5GB free space** (if using the large Whisper model).
+- **GPU Acceleration** (Optional):
+  - **CUDA 12.2** required for GPU processing.
+  - Falls back to **CPU** if no compatible GPU is detected.
+- **Operating System**:
+  - **Windows (Supported)**
+  - **macOS (Planned Apple Silicon Support)**
 
-You can tweak the preferences locations in the path.py file or change
-its name in the 'constants.py' file.
+---
+
+## **Installation & Usage**
+
+1. **Copy the entire project folder** to any location on your system.
+2. **Run `launcher.py` with Python**:
+
+   ```sh
+   python launcher.py
