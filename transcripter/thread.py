@@ -122,7 +122,7 @@ class TranscriptionWorker(QtCore.QThread):
         """
         self.update_progress(90)
         print('Launch translation')
-        translate.translate_srt(self.file_path, srt_file, self.target_language)
+        translate.translate_srt(srt_file, self.target_language)
 
     def cleanup(self, temp_srt_files: list):
         """

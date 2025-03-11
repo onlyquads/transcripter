@@ -72,6 +72,9 @@ def translate_srt(input_srt, target_language="fr"):
     the input language. Skips translation if source and target languages
     are the same.
     """
+
+    if target_language == "en":
+        return
     with open(input_srt, "r", encoding="utf-8") as file:
         lines = file.readlines()
 

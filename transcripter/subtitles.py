@@ -1,13 +1,14 @@
 import os
 import paths
 
-from transcripter import translate
+from transcripter import constants
+
 
 def srt_exists(original_video_path):
     dir_name = os.path.dirname(original_video_path)
     video_file_no_ext = os.path.splitext(os.path.basename(original_video_path))[0]
 
-    for lang_code in translate.LANGUAGE_CODES.values():
+    for lang_code in constants.LANGUAGE_CODES.values():
         subtitle_file_path = os.path.join(
             dir_name, f"{video_file_no_ext}.{lang_code}.srt")
         if os.path.exists(subtitle_file_path):
@@ -15,7 +16,6 @@ def srt_exists(original_video_path):
             return subtitle_file_path
     print("No existing subtitle found.")
     return False
-
 
 
 def merge_srt_files(srt_files, original_video_path, target_language):
