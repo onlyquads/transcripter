@@ -4,8 +4,6 @@ from transcripter import envs
 from transcripter import paths
 from transcripter import ffmpeg
 
-TOOLNAME = "dwtranscripter"
-
 
 def find_py_executable():
     """
@@ -30,11 +28,11 @@ def find_py_executable():
 
 
 python_executable = find_py_executable()
-user_document_dw_path = paths.get_user_dw_documents_dir()
+user_document_dw_path = paths.get_user_documents_dir()
 venv_path = os.path.join(
     user_document_dw_path,
     "venvs",
-    TOOLNAME
+    envs.TOOLNAME
     )
 requirements_path = os.path.join(
     paths.get_current_script_dir(),
@@ -62,9 +60,7 @@ envs.create_venv(
     )
 
 script_path = os.path.join(
-    paths.get_user_dw_documents_dir(),
-    "transcripter",
-    "transcripter",
+    paths.get_current_script_dir(),
     "main.py")
 
 

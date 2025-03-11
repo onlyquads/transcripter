@@ -1,20 +1,19 @@
 import os
 import subprocess
+from transcripter import constants
 
-TOOL_NAME = "dwtranscripter"
 PYTHON_VERSION = "3.9"
 
-print(f"\n Creating {TOOL_NAME} Desktop shortcuts...\n")
+print(f"\n Creating {constants.TOOLNAME} Desktop shortcuts...\n")
 
 
 shortcuts_to_create = [
-    TOOL_NAME,
+    constants.TOOLNAME,
 ]
 
 software_dir = os.path.abspath((os.path.dirname(__file__)))
 software_dir = software_dir.lower()
-icons_dir = f"{software_dir}/transcripter/icons"
-remote = " Remote_" if __file__[1] == ":" else ""
+icon_path = f"{software_dir}/transcripter/icons"
 
 
 def create_shortcut(shortcut_path, target_path, icon_path=None, python=True):
@@ -38,19 +37,16 @@ def create_shortcut(shortcut_path, target_path, icon_path=None, python=True):
     subprocess.call(["powershell", "-Command", create_shortcut_cmd])
 
 
-for app_name in shortcuts_to_create:
-    script_path = f"{software_dir}/{app_name}.py"
-    start_in = os.path.dirname(script_path)
-    home = os.path.expanduser("~")
-    shortcut_path = f"{home}/Desktop/{remote}{app_name}.lnk"
-    icon_path = f"{icons_dir}/{app_name}.ico"
-    print(f"   - Adding shortcut for {app_name}")
-    create_shortcut(
-        shortcut_path=shortcut_path,
-        target_path=script_path,
-        icon_path=icon_path,
-        python=True
-        )
+script_path = f"{software_dir}/launcher.py"
+home = os.path.expanduser("~")
+shortcut_path = f"{home}/Desktop/{constants.TOOLNAME}.lnk"
+print(f"   - Adding shortcut for {constants.TOOLNAME}")
+create_shortcut(
+    shortcut_path=shortcut_path,
+    target_path=script_path,
+    icon_path=icon_path,
+    python=True
+    )
 
 close_msg = "\n Press enter to close...\n "
 try:

@@ -4,26 +4,8 @@ from PySide6 import QtGui
 
 from transcripter import thread
 from transcripter import ffmpeg
-from transcripter import translate
-
-
-TOOLNAME = "Video to srt"
-VERSION = "version b0.1"
-
-# Settings Names
-SETTING_NAMES_MODEL = ["base", "medium", "large"]
-SETTING_NAME_BEAM_SIZE = "Beam Size"
-SETTING_NAME_TEMPERATURE = "Temperature"
-SETTING_NAME_COMPRESSION_RATIO = "Compression Ratio"
-SETTING_NAME_CHUNK_DURATION = "Chunk Duration"
-
-# Default settings
-SETTING_MODEL = SETTING_NAMES_MODEL[1]
-SETTING_BEAM_SIZE = 0.8
-SETTING_TEMPERATURE = 0.1
-SETTING_COMPRESSION_RATIO = 3.0
-SETTING_CHUNK_DURATION = 300
-
+from transcripter import constants
+from transcripter import preferences
 
 
 class VideoTranscriptor(QtWidgets.QWidget):
@@ -31,17 +13,22 @@ class VideoTranscriptor(QtWidgets.QWidget):
         super().__init__()
         # Add ffmpeg to path
         ffmpeg.add_ffmpeg_to_path()
+        self.prompt = None
+        preferences.set_default_preferences()
         self.initUI()
+        self.load_from_prefs()
 
     def initUI(self):
-        self.setWindowTitle(TOOLNAME)
+        self.setWindowTitle(constants.TOOLNAME)
         self.setGeometry(100, 100, 200, 250)
+
 
         self.main_layout = QtWidgets.QVBoxLayout()
 
         self.settings_container = QtWidgets.QFrame()
         self.settings_container.setVisible(False)
-        self.settings_container.setLayout(QtWidgets.QVBoxLayout())
+        self.settings_main_layout = QtWidgets.QVBoxLayout()
+        self.settings_container.setLayout(self.settings_main_layout)
 
         # Video selection button
         self.select_button = QtWidgets.QPushButton("Select Video")
@@ -53,14 +40,15 @@ class VideoTranscriptor(QtWidgets.QWidget):
         # Language selection dropdown
         self.language_label = QtWidgets.QLabel("Select Target Language:")
         self.language_combo = QtWidgets.QComboBox()
-        self.language_combo.addItems((translate.LANGUAGE_CODES.keys()))
-        self.language_combo.setCurrentText(list(translate.LANGUAGE_CODES.keys())[0])
+        self.language_combo.addItems((constants.LANGUAGE_CODES.keys()))
+        self.language_combo.setCurrentText(
+            list(constants.LANGUAGE_CODES.keys())[0])
 
         # Select whisper model to use
         self.model_label = QtWidgets.QLabel("Select Whisper model:")
         self.model_version = QtWidgets.QComboBox()
-        self.model_version.addItems(SETTING_NAMES_MODEL)
-        self.model_version.setCurrentText(SETTING_MODEL)
+        self.model_version.addItems(constants.SETTING_NAMES_MODEL)
+        self.model_version.setCurrentText(constants.MODEL)
         self.model_version.setToolTip(
             "Select the Whisper model. The better the slower")
 
@@ -69,7 +57,6 @@ class VideoTranscriptor(QtWidgets.QWidget):
             "Force new srt")
         self.force_new_transcribe_checkbox.setChecked(True)
 
-
         # Add setting checkbox
         self.show_settings_checkbox = QtWidgets.QCheckBox("Settings")
         self.show_settings_checkbox.setChecked(False)
@@ -77,43 +64,59 @@ class VideoTranscriptor(QtWidgets.QWidget):
             self.toggle_settings)
 
         # Set model beam_size
-        self.beam_size_label = QtWidgets.QLabel(f"{SETTING_NAME_BEAM_SIZE}:")
+        self.beam_size_label = QtWidgets.QLabel(
+            f"{constants.SETTING_NAME_BEAM_SIZE}:")
         self.beam_side_doublespin = QtWidgets.QDoubleSpinBox()
         self.beam_side_doublespin.setSingleStep(0.1)
         self.beam_side_doublespin.setDecimals(1)
-        self.beam_side_doublespin.setValue(SETTING_BEAM_SIZE)
+        self.beam_side_doublespin.setValue(constants.BEAM_SIZE)
         self.beam_side_doublespin.setToolTip(
             "higher = better accuracy, but slower processing")
 
         # Set model temperature
-        self.temperature_label = QtWidgets.QLabel(f"{SETTING_NAME_TEMPERATURE}:")
+        self.temperature_label = QtWidgets.QLabel(
+            f"{constants.SETTING_NAME_TEMPERATURE}:")
         self.temperature_doublespin = QtWidgets.QDoubleSpinBox()
         self.temperature_doublespin.setSingleStep(0.1)
         self.temperature_doublespin.setDecimals(1)
-        self.temperature_doublespin.setValue(SETTING_TEMPERATURE)
+        self.temperature_doublespin.setValue(constants.TEMPERATURE)
         self.temperature_doublespin.setToolTip(
             "higher value = more random output, lower = more deterministic")
 
         # Compression ratio threshold
         self.compression_ratio_threshold_label = QtWidgets.QLabel(
-            f'{SETTING_NAME_COMPRESSION_RATIO}:')
+            f'{constants.SETTING_NAME_COMPRESSION_RATIO}:')
         self.compression_ratio_threshold_spinbox = QtWidgets.QDoubleSpinBox()
         self.compression_ratio_threshold_spinbox.setRange(1, 5)
         self.compression_ratio_threshold_spinbox.setSingleStep(0.1)
         self.compression_ratio_threshold_spinbox.setValue(
-            SETTING_COMPRESSION_RATIO)
+            constants.COMPRESSION_RATIO)
         self.compression_ratio_threshold_spinbox.setToolTip(
             "Lower this if too much text lines")
 
         # Set chunk duration
         self.chunk_duration_label = QtWidgets.QLabel(
-            f"{SETTING_NAME_CHUNK_DURATION}:")
+            f"{constants.SETTING_NAME_CHUNK_DURATION}:")
         self.chunk_duration_spinbox = QtWidgets.QSpinBox()
         self.chunk_duration_spinbox.setRange(100, 600)
         self.chunk_duration_spinbox.setSingleStep(1)
-        self.chunk_duration_spinbox.setValue(SETTING_CHUNK_DURATION)
+        self.chunk_duration_spinbox.setValue(constants.CHUNK_DURATION)
         self.chunk_duration_spinbox.setToolTip(
             "Select a chunk value between 100 and 600")
+
+        # Set prompt
+        self.prompt_button = QtWidgets.QPushButton("Prompt")
+        self.prompt_button.clicked.connect(self.set_prompt)
+
+        # Save settings
+        self.save_settings_layout = QtWidgets.QHBoxLayout()
+        self.save_settings_button = QtWidgets.QPushButton('Save as default')
+        self.save_settings_button.clicked.connect(
+            self.save_settings)
+
+        self.reset_all_settings_button = QtWidgets.QPushButton('Reset all')
+        self.reset_all_settings_button.clicked.connect(
+            self.reset_all_settings)
 
         # Progress bar
         self.progress_bar = QtWidgets.QProgressBar()
@@ -124,19 +127,25 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.launch_button.clicked.connect(self.launch_processing)
 
         # Version info
-        version_info = QtWidgets.QLabel(VERSION)
+        version_info = QtWidgets.QLabel(constants.TOOL_VERSION)
         version_info.setFont(QtGui.QFont("Arial", 8))
 
-        self.settings_container.layout().addWidget(self.beam_size_label)
-        self.settings_container.layout().addWidget(self.beam_side_doublespin)
-        self.settings_container.layout().addWidget(self.temperature_label)
-        self.settings_container.layout().addWidget(self.temperature_doublespin)
-        self.settings_container.layout().addWidget(
+        self.save_settings_layout.addWidget(self.save_settings_button)
+        self.save_settings_layout.addWidget(self.reset_all_settings_button)
+
+        self.settings_main_layout.addWidget(self.beam_size_label)
+        self.settings_main_layout.addWidget(self.beam_side_doublespin)
+        self.settings_main_layout.addWidget(self.temperature_label)
+        self.settings_main_layout.addWidget(self.temperature_doublespin)
+        self.settings_main_layout.addWidget(
             self.compression_ratio_threshold_label)
-        self.settings_container.layout().addWidget(
+        self.settings_main_layout.addWidget(
             self.compression_ratio_threshold_spinbox)
-        self.settings_container.layout().addWidget(self.chunk_duration_label)
-        self.settings_container.layout().addWidget(self.chunk_duration_spinbox)
+        self.settings_main_layout.addWidget(self.chunk_duration_label)
+        self.settings_main_layout.addWidget(self.chunk_duration_spinbox)
+        self.settings_main_layout.addWidget(self.prompt_button)
+        self.settings_main_layout.addLayout(
+            self.save_settings_layout)
 
         self.main_layout.addWidget(self.select_button)
         self.main_layout.addWidget(self.file_label)
@@ -151,6 +160,57 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.main_layout.addWidget(self.launch_button)
         self.main_layout.addWidget(version_info)
         self.setLayout(self.main_layout)
+
+    def set_prompt(self):
+        """Open the PromptInputDialog and get user input."""
+        dialog = PromptInputDialog()
+        if dialog.exec():  # If user clicks "Save"
+            user_text = dialog.text_edit.toPlainText()
+            QtWidgets.QMessageBox.information(
+                self, "Prompt Saved", f"New Prompt:\n{user_text}")
+
+    def save_settings(self):
+        print('Saving settings')
+        preferences.set_preference(
+            "target_language",
+            self.language_combo.currentText())
+        preferences.set_preference(
+            "model",
+            self.model_version.currentText())
+        preferences.set_preference(
+            "beam_size",
+            self.beam_side_doublespin.value())
+        preferences.set_preference(
+            "temperature",
+            self.temperature_doublespin.value())
+        preferences.set_preference(
+            "compression_ratio",
+            self.compression_ratio_threshold_spinbox.value())
+        preferences.set_preference(
+            "chunk_duration",
+            self.chunk_duration_spinbox.value())
+
+    def reset_all_settings(self):
+        preferences.reset_preferences()
+        self.load_from_prefs()
+
+    def load_from_prefs(self):
+
+        target_language = preferences.get_preference("target_language")
+        model = preferences.get_preference("model")
+        beam_size = preferences.get_preference("beam_size")
+        temperature = preferences.get_preference("temperature")
+        compression_ratio = preferences.get_preference("compression_ratio")
+        chunk_duration = preferences.get_preference("chunk_duration")
+        prompt = preferences.get_preference("prompt")
+
+        self.language_combo.setCurrentText(target_language)
+        self.model_version.setCurrentText(model)
+        self.beam_side_doublespin.setValue(beam_size)
+        self.temperature_doublespin.setValue(temperature)
+        self.compression_ratio_threshold_spinbox.setValue(compression_ratio)
+        self.chunk_duration_spinbox.setValue(chunk_duration)
+        self.prompt = prompt
 
     def select_video(self):
         file_dialog = QtWidgets.QFileDialog()
@@ -180,14 +240,14 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.launch_button.setEnabled(False)
 
         # Determine processing mode
-        # if selected_language in translate.LANGUAGE_CODES:
-        lang_target = translate.LANGUAGE_CODES[selected_language]
+        lang_target = constants.LANGUAGE_CODES[selected_language]
         mode = "translate" if lang_target == "en" else "transcribe"
 
         beam_size = self.beam_side_doublespin.value()
         temperature = self.temperature_doublespin.value()
         chunk_duration = self.chunk_duration_spinbox.value()
-        compression_threshold = self.compression_ratio_threshold_spinbox.value()
+        compression_threshold = (
+            self.compression_ratio_threshold_spinbox.value())
         force_new_srt = self.force_new_transcribe_checkbox.isChecked()
         # Start worker thread
         self.worker = thread.TranscriptionWorker(
@@ -199,6 +259,7 @@ class VideoTranscriptor(QtWidgets.QWidget):
             chunk_duration=chunk_duration,
             target_language=lang_target,
             compression_threshold=compression_threshold,
+            prompt=self.prompt,
             force_new_srt=force_new_srt)
         self.worker.progress.connect(self.update_progress)
         self.worker.finished.connect(self.transcription_complete)
@@ -239,6 +300,50 @@ class VideoTranscriptor(QtWidgets.QWidget):
         msg_box.setIcon(QtWidgets.QMessageBox.Information)
         msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
         msg_box.exec()
+
+
+class PromptInputDialog(QtWidgets.QDialog):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Enter Text")
+        self.setGeometry(300, 300, 400, 200)
+
+        # Layout
+        layout = QtWidgets.QVBoxLayout()
+
+        # Text box with a character limit of 300
+        self.text_edit = QtWidgets.QTextEdit(self)
+        self.text_edit.setPlaceholderText(constants.PROMPT)
+        self.text_edit.textChanged.connect(self.check_character_limit)
+        layout.addWidget(self.text_edit)
+
+        # Save button
+        self.save_button = QtWidgets.QPushButton("Save")
+        self.save_button.clicked.connect(self.save_text)
+        layout.addWidget(self.save_button)
+
+        self.setLayout(layout)
+
+    def check_character_limit(self):
+        """Ensure the text does not exceed 300 characters."""
+        text = self.text_edit.toPlainText()
+        if len(text) > 300:
+            QtWidgets.QMessageBox.warning(
+                self, "Limit Exceeded", "Text cannot exceed 300 characters.")
+            self.text_edit.setPlainText(text[:300])  # Trim excess characters
+            self.text_edit.moveCursor(self.text_edit.textCursor().End)
+
+    def save_text(self):
+        """Retrieve and save the text when the user presses 'Save'."""
+        self.user_text = self.text_edit.toPlainText()
+        preferences.set_preference(
+            "prompt", self.user_text
+        )
+        self.prompt = self.user_text
+        self.accept()
+
+
 
 
 if __name__ == "__main__":

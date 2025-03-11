@@ -26,6 +26,7 @@ class TranscriptionWorker(QtCore.QThread):
         compression_threshold: float,
         force_new_srt: bool = True,
         target_language: str = None,
+        prompt=None
     ):
         super().__init__()
         self.file_path = file_path
@@ -37,6 +38,7 @@ class TranscriptionWorker(QtCore.QThread):
         self.compression_threshold = compression_threshold
         self.chunk_duration = chunk_duration
         self.force_new_srt = force_new_srt
+        self.prompt = prompt
 
     def run(self):
         """
@@ -95,6 +97,7 @@ class TranscriptionWorker(QtCore.QThread):
                 temperature=self.temperature,
                 compression_ratio_threshold=self.compression_threshold,
                 chunk_start_time=chunk_start_time,
+                prompt=self.prompt
                 )
 
             if chunk_srt:
