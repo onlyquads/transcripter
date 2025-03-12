@@ -33,11 +33,13 @@ The app provides several settings to fine-tune the **quality and accuracy** of t
 ## **Installation & Usage**
 
 1. **Copy the entire project folder** to any location on your system.
-2. **Run `launcher.py` with Python**:
+2. Run **`create_desktop_shortcut.py`** to create a desktop shortcut, then launch the app from the created icon.
+- ⚠️ The first launch may take a few moments while it downloads and installs all dependencies.
+   **Alternatively**, you can **run `launcher.py` manually with Python**:
 
    ```sh
    python launcher.py
-
+   ```
 
 3. Select a movie file, select the target language and Whisper model.
 4. If **Force new srt** is checked, it will process the video and transcript it
@@ -46,8 +48,8 @@ will go to translate mode only (faster).
 
 >**Notes**:
 >- Settings are stored in `/user/USERNAME/.transcripter_prefs`
-You can tweak the settings and click on **save as default** to keep
-those settings for the next session or click on **reset all** to reset them default button.
+You can tweak the settings and click on **"save as default"** to keep
+those settings for the next session or click on **"reset all"** to reset them default button.
 >- Most of the needed package will be installed into `/user/USERNAME/documents/transcripter_venv`
 >- Whisper models will be downloaded on request into `/user/USERNAME/.cache`
 >- ArgosTranslate models will be downloaded on request into `/user/USERNAME/.local`
