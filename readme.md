@@ -3,8 +3,9 @@
 **Transcripter** is a tool that generates **.srt subtitle files** from video files using **OpenAI's Whisper** for transcription. It also supports **translation** via **Argos Translate** to convert subtitles into different languages.
 
 The app provides several settings to fine-tune the **quality and accuracy** of transcriptions.
-
-<img src="https://github.com/onlyquads/transcripter/tree/master/transcripter/help_images/transcripter_help_02.png" alt="App Screenshot" width="70">
+<p align="center">
+<img src="https://github.com/onlyquads/transcripter/blob/master/transcripter/help_images/transcripter_help_02.png?raw=true" alt="App Screenshot" width="150">
+</p>
 
 ---
 
@@ -39,11 +40,11 @@ The app provides several settings to fine-tune the **quality and accuracy** of t
 
 
 3. Select a movie file, select the target language and Whisper model.
-4. If Force new srt is checked, it will process the video and transcript it
+4. If **Force new srt** is checked, it will process the video and transcript it
 even if a subtitle already exists. If unchecked and a subtitle exists, it
 will go to translate mode only (faster).
 
-Note: Settings are store in /user/USERNAME/.transcripter_prefs
+>**Note**: Settings are store in `/user/USERNAME/.transcripter_prefs`
 You can tweak the settings and click on 'save as default' to keep
 thos settings for the next session.
 
