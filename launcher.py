@@ -30,9 +30,9 @@ def find_py_executable():
 
 
 python_executable = find_py_executable()
-user_document_dw_path = paths.get_user_documents_dir()
+user_document_path = paths.get_user_documents_dir()
 venv_path = os.path.join(
-    user_document_dw_path,
+    user_document_path,
     f"{constants.TOOLNAME}_venv",
     constants.TOOLNAME
     )
