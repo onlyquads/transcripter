@@ -3,6 +3,7 @@ import os
 from transcripter import envs
 from transcripter import paths
 from transcripter import ffmpeg
+from transcripter import constants
 
 
 def find_py_executable():
@@ -21,6 +22,7 @@ def find_py_executable():
     for base_dir in base_dirs:
         python_path = os.path.join(base_dir, "python.exe")
         if os.path.exists(python_path):
+            print(f"Using python at {python_path}")
             return python_path
 
     print("Installed python.exe not found in common directories.")
@@ -31,8 +33,8 @@ python_executable = find_py_executable()
 user_document_dw_path = paths.get_user_documents_dir()
 venv_path = os.path.join(
     user_document_dw_path,
-    "venvs",
-    envs.TOOLNAME
+    f"{constants.TOOLNAME}_venv",
+    constants.TOOLNAME
     )
 requirements_path = os.path.join(
     paths.get_current_script_dir(),

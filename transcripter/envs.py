@@ -5,7 +5,6 @@ import os
 import venv
 import subprocess
 
-TOOLNAME = "transcripter"
 
 def create_venv(
         venv_path, requirements_path, python_executable=None, env_vars=None):
