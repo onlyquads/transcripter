@@ -36,6 +36,5 @@ The app provides several settings to fine-tune the **quality and accuracy** of t
    python launcher.py
 
 ### Todo:
-- Imrpove the progress bar feedback
-- Improve translation logic
+- Improve the progress bar feedback
 - Add support for macOS
