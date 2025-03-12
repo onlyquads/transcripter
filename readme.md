@@ -4,6 +4,8 @@
 
 The app provides several settings to fine-tune the **quality and accuracy** of transcriptions.
 
+<img src="https://github.com/onlyquads/transcripter/tree/master/transcripter/help_images/transcripter_help_02.png" alt="App Screenshot" width="70">
+
 ---
 
 ## **Features**
@@ -34,6 +36,16 @@ The app provides several settings to fine-tune the **quality and accuracy** of t
 
    ```sh
    python launcher.py
+
+
+3. Select a movie file, select the target language and Whisper model.
+4. If Force new srt is checked, it will process the video and transcript it
+even if a subtitle already exists. If unchecked and a subtitle exists, it
+will go to translate mode only (faster).
+
+Note: Settings are store in /user/USERNAME/.transcripter_prefs
+You can tweak the settings and click on 'save as default' to keep
+thos settings for the next session.
 
 ### Todo:
 - Imrpove the progress bar feedback
