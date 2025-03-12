@@ -48,6 +48,5 @@ You can tweak the settings and click on 'save as default' to keep
 thos settings for the next session.
 
 ### Todo:
-- Imrpove the progress bar feedback
-- Improve translation logic
+- Improve the progress bar feedback
 - Add support for macOS
