@@ -6,8 +6,12 @@ def get_current_script_dir():
     return os.path.dirname(os.path.abspath(__file__))
 
 
+def get_user_home_dir():
+    return os.path.join(os.path.expanduser("~"))
+
+
 def get_user_documents_dir():
-    return os.path.join(os.path.expanduser("~/Documents"))
+    return os.path.join(get_user_home_dir(), "/Documents")
 
 
 def get_filename_without_ext(file_path):
@@ -18,9 +22,9 @@ def get_filename_without_ext(file_path):
 
 
 def get_prefs_dir():
-    user_documents = get_user_documents_dir()
+    user_home_dir = get_user_home_dir()
     return os.path.join(
-        user_documents, constants.PREFERENCES_DIR)
+        user_home_dir, constants.PREFERENCES_DIR_NAME)
 
 
 def get_prefs_filepath():

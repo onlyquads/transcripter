@@ -1,9 +1,9 @@
 import re
 import os
-from langdetect import detect, DetectorFactory
-from langdetect.lang_detect_exception import LangDetectException
 from argostranslate import package
 from argostranslate import translate
+from langdetect import detect, DetectorFactory
+from langdetect.lang_detect_exception import LangDetectException
 
 from transcripter import paths
 
@@ -58,7 +58,7 @@ def extract_text_for_detection(srt_lines, max_lines=10):
     for line in srt_lines:
         line = line.strip()
         if not line or re.match(r'^\d+$', line) or re.match(
-            r'^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}', line):
+                r'^\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}', line):
             continue
         extracted_lines.append(line)
         if len(extracted_lines) >= max_lines:
@@ -66,15 +66,13 @@ def extract_text_for_detection(srt_lines, max_lines=10):
     return " ".join(extracted_lines)
 
 
-def translate_srt(input_srt, target_language="fr"):
+def translate_srt(input_file, input_srt, target_language="fr"):
     """
     Translate an SRT file while preserving timestamps and auto-detecting
     the input language. Skips translation if source and target languages
     are the same.
     """
 
-    if target_language == "en":
-        return
     with open(input_srt, "r", encoding="utf-8") as file:
         lines = file.readlines()
 
@@ -87,10 +85,12 @@ def translate_srt(input_srt, target_language="fr"):
 
     src_lang = detect_language(sample_text)
 
-    print(f"Detected language: {src_lang} -> Translating to: {target_language}")
+    print(
+        f"Detected language: {src_lang} -> Translating to: {target_language}")
 
     if src_lang == target_language:
-        print("Source and target languages are the same. Skipping translation.")
+        print(
+            "Source and target languages are the same. Skipping translation.")
         return
 
     install_translation_model(src_lang, target_language)
@@ -110,7 +110,7 @@ def translate_srt(input_srt, target_language="fr"):
                     src_lang,
                     target_language) + "\n"
             )
-    file_basename, file_dirname = paths.get_filename_without_ext(input_srt)
+    file_basename, file_dirname = paths.get_filename_without_ext(input_file)
     output_srt_filename = f"{file_basename}.{target_language}.srt"
     output_srt = os.path.join(file_dirname, output_srt_filename)
 

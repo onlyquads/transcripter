@@ -16,7 +16,7 @@ The app provides several settings to fine-tune the **quality and accuracy** of t
 ---
 
 ## **Requirements**
-- **Python**: `3.9.5 - 3.9.13`
+- **Python**: minimum `3.9.5`
 - **Storage**: Up to **5GB free space** (if using the large Whisper model).
 - **GPU Acceleration** (Optional):
   - **CUDA 12.2** required for GPU processing.
@@ -34,7 +34,6 @@ The app provides several settings to fine-tune the **quality and accuracy** of t
 
    ```sh
    python launcher.py
-
 
 ### Todo:
 - Imrpove the progress bar feedback

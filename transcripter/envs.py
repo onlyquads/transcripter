@@ -93,12 +93,13 @@ def run_script_in_venv(venv_path, script_path, show_console=False):
 
     if not os.path.exists(python_executable):
         print(
-            f"[ERROR] Python executable not found in the virtual environment: {python_executable}"
-        )
+            "[ERROR] Python executable not found in the virtual environment: "
+            f"{python_executable}")
         return
 
     try:
-        print(f"[INFO] Running script: {script_path} using {python_executable}")
+        print(
+            f"[INFO] Running script: {script_path} using {python_executable}")
 
         if show_console:
             # Run without capturing output (prints directly in the console)
@@ -114,7 +115,9 @@ def run_script_in_venv(venv_path, script_path, show_console=False):
             if result.returncode == 0:
                 print("[SUCCESS] Script executed successfully.")
             else:
-                print(f"[ERROR] Script execution failed with exit code {result.returncode}")
+                print(
+                    "[ERROR] Script execution failed with exit code "
+                    f"{result.returncode}")
                 print(f"[STDOUT] {result.stdout.strip()}")
                 print(f"[STDERR] {result.stderr.strip()}")
 

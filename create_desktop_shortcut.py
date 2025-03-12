@@ -13,7 +13,7 @@ shortcuts_to_create = [
 
 software_dir = os.path.abspath((os.path.dirname(__file__)))
 software_dir = software_dir.lower()
-icon_path = f"{software_dir}/transcripter/icons"
+icon_path = f"{software_dir}/transcripter/icons/{constants.TOOLNAME}.ico"
 
 
 def create_shortcut(shortcut_path, target_path, icon_path=None, python=True):

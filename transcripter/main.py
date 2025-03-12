@@ -22,7 +22,6 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.setWindowTitle(constants.TOOLNAME)
         self.setGeometry(100, 100, 200, 250)
 
-
         self.main_layout = QtWidgets.QVBoxLayout()
 
         self.settings_container = QtWidgets.QFrame()
@@ -102,10 +101,14 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.chunk_duration_spinbox.setSingleStep(1)
         self.chunk_duration_spinbox.setValue(constants.CHUNK_DURATION)
         self.chunk_duration_spinbox.setToolTip(
+            "Split input video into small parts. "
             "Select a chunk value between 100 and 600")
 
         # Set prompt
-        self.prompt_button = QtWidgets.QPushButton("Prompt")
+        self.prompt_button = QtWidgets.QPushButton("Prompt Hint")
+        self.prompt_button.setToolTip(
+            "A hint to guide the model "
+            "(useful for specific vocabulary or context)")
         self.prompt_button.clicked.connect(self.set_prompt)
 
         # Save settings
@@ -295,7 +298,8 @@ class VideoTranscriptor(QtWidgets.QWidget):
         seconds = elapsed_time % 60
 
         msg_box.setText(
-            f" Transcription saved at:\n{srt_file}\n Time taken: {minutes} min {seconds:.2f} sec"
+            f" Transcription saved at:\n{srt_file}\n "
+            f"Time taken: {minutes} min {seconds:.2f} sec"
         )
         msg_box.setIcon(QtWidgets.QMessageBox.Information)
         msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
@@ -314,7 +318,7 @@ class PromptInputDialog(QtWidgets.QDialog):
 
         # Text box with a character limit of 300
         self.text_edit = QtWidgets.QTextEdit(self)
-        self.text_edit.setPlaceholderText(constants.PROMPT)
+        self.text_edit.setPlainText(constants.PROMPT)
         self.text_edit.textChanged.connect(self.check_character_limit)
         layout.addWidget(self.text_edit)
 
@@ -326,24 +330,25 @@ class PromptInputDialog(QtWidgets.QDialog):
         self.setLayout(layout)
 
     def check_character_limit(self):
-        """Ensure the text does not exceed 300 characters."""
+        """
+        Ensure the text does not exceed 300 characters.
+        """
         text = self.text_edit.toPlainText()
         if len(text) > 300:
             QtWidgets.QMessageBox.warning(
-                self, "Limit Exceeded", "Text cannot exceed 300 characters.")
-            self.text_edit.setPlainText(text[:300])  # Trim excess characters
+                self, "Limit Exceeded", "Text cannot exceed 400 characters.")
             self.text_edit.moveCursor(self.text_edit.textCursor().End)
 
     def save_text(self):
-        """Retrieve and save the text when the user presses 'Save'."""
+        """
+        Retrieve and save the text when the user presses 'Save'.
+        """
         self.user_text = self.text_edit.toPlainText()
         preferences.set_preference(
             "prompt", self.user_text
         )
         self.prompt = self.user_text
         self.accept()
-
-
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ class TranscriptionWorker(QtCore.QThread):
         prompt=None
     ):
         super().__init__()
-        self.file_path = file_path
+        self.input_file = file_path
         self.mode = mode
         self.target_language = target_language
         self.model_size = model_size
@@ -48,7 +48,7 @@ class TranscriptionWorker(QtCore.QThread):
         self.update_progress(5)
         temp_srt_files = None
         existing_subtitle_file = subtitles.srt_exists(
-            original_video_path=self.file_path)
+            original_video_path=self.input_file)
 
         if not existing_subtitle_file or self.force_new_srt is True:
             video_chunks = self.split_video()
@@ -63,7 +63,6 @@ class TranscriptionWorker(QtCore.QThread):
             # Bypass whisper transcription
             final_srt = existing_subtitle_file
 
-        # if translate.LANGUAGE_CODES.get(self.target_language) != "en":
         self.translate_srt(final_srt)
 
         if temp_srt_files:
@@ -75,7 +74,7 @@ class TranscriptionWorker(QtCore.QThread):
         Splits the video into chunks and returns the list of chunk file paths.
         """
         return ffmpeg.split_video_into_chunks(
-            self.file_path, chunk_duration=self.chunk_duration)
+            self.input_file, chunk_duration=self.chunk_duration)
 
     def process_chunks(self, video_chunks: list) -> list:
         """
@@ -110,10 +109,10 @@ class TranscriptionWorker(QtCore.QThread):
         """
         Merges temporary SRT files into a final output file.
         """
-        self.update_progress(80)
+        self.update_progress(85)
         return subtitles.merge_srt_files(
             temp_srt_files,
-            self.file_path,
+            self.input_file,
             self.target_language)
 
     def translate_srt(self, srt_file: str):
@@ -122,7 +121,8 @@ class TranscriptionWorker(QtCore.QThread):
         """
         self.update_progress(90)
         print('Launch translation')
-        translate.translate_srt(srt_file, self.target_language)
+        translate.translate_srt(
+            self.input_file, srt_file, self.target_language)
 
     def cleanup(self, temp_srt_files: list):
         """

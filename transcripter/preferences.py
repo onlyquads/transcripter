@@ -1,12 +1,16 @@
-import json
 import os
+import json
+import subprocess
 
 from transcripter import constants
 from transcripter import paths
 
 
 def load_preferences():
-    """Load preferences from the JSON file. Returns an empty dictionary if the file does not exist or is invalid."""
+    """
+    Load preferences from the JSON file.
+    Returns an empty dictionary if the file does not exist or is invalid.
+    """
 
     prefs_filepath = paths.get_prefs_filepath()
 
@@ -25,7 +29,9 @@ def save_preferences(preferences):
     Save preferences to the JSON file. Ensure the file and its directory exist.
     """
     prefs_filepath = paths.get_prefs_filepath()
-    os.makedirs(os.path.dirname(prefs_filepath), exist_ok=True)  # Ensure directory exists
+    os.makedirs(os.path.dirname(prefs_filepath), exist_ok=True)
+
+    subprocess.run(["attrib", "+h", paths.get_prefs_dir()], shell=True)
 
     try:
         with open(prefs_filepath, "w", encoding="utf-8") as file:
@@ -33,9 +39,12 @@ def save_preferences(preferences):
     except IOError:
         print("Error saving preferences.")
 
+
 def set_default_preferences():
-    """Set default preferences if the file does not exist."""
-    if not os.path.exists(paths.get_prefs_filepath()):  # Check if the file exists
+    """
+    Set default preferences if the file does not exist.
+    """
+    if not os.path.exists(paths.get_prefs_filepath()):
         preferences = {
             "target_language": list(constants.LANGUAGE_CODES.keys())[0],
             "model": constants.MODEL,
@@ -47,8 +56,12 @@ def set_default_preferences():
         }
         save_preferences(preferences)
 
+
 def reset_preferences():
-    """Reset all preferences to their default values by overwriting the existing file."""
+    """
+    Reset all preferences to their default values by overwriting
+    the existing file.
+    """
     prefs_filepath = paths.get_prefs_filepath()
 
     # Delete the file if it exists
@@ -79,16 +92,3 @@ def remove_preference(key):
     if key in preferences:
         del preferences[key]
         save_preferences(preferences)
-
-
-
-# # Example usage
-# if __name__ == "__main__":
-#     set_preference("dark_mode", True)
-#     set_preference("download_path", "/home/user/downloads")
-#     set_preference("volume_level", 0.8)
-
-#     print(get_preference("dark_mode", False))  # Output: True
-#     print(get_preference("download_path", "default_path"))  # Output: /home/user/downloads
-
-#     remove_preference("volume_level")
