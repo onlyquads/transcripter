@@ -44,9 +44,14 @@ The app provides several settings to fine-tune the **quality and accuracy** of t
 even if a subtitle already exists. If unchecked and a subtitle exists, it
 will go to translate mode only (faster).
 
->**Note**: Settings are store in `/user/USERNAME/.transcripter_prefs`
-You can tweak the settings and click on 'save as default' to keep
-thos settings for the next session.
+>**Notes**:
+>- Settings are stored in `/user/USERNAME/.transcripter_prefs`
+You can tweak the settings and click on **save as default** to keep
+those settings for the next session or click on **reset all** to reset them default button.
+>- Most of the needed package will be installed into `/user/USERNAME/documents/transcripter_venv`
+>- Whisper models will be downloaded on request into `/user/USERNAME/.cache`
+>- ArgosTranslate models will be downloaded on request into `/user/USERNAME/.local`
+
 
 ### Todo:
 - Improve the progress bar feedback
