@@ -8,8 +8,10 @@ PREFERENCES_DIR_NAME = ".transcripter_prefs"
 LANGUAGE_CODES = {
     "English": "en",
     "French": "fr",
+    "Dutch": "nl",
     "Spannish": "es",
-    "Portuguese": "pt"
+    "Portuguese": "pt",
+    "Italian": "it",
 }
 SETTING_NAMES_MODEL = ["base", "medium", "large"]
 SETTING_NAME_BEAM_SIZE = "Accuracy Level"

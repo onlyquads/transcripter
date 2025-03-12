@@ -6,13 +6,14 @@ from transcripter import constants
 
 def srt_exists(original_video_path):
     dir_name = os.path.dirname(original_video_path)
-    video_file_no_ext = os.path.splitext(os.path.basename(original_video_path))[0]
+    video_file_no_ext = (
+        os.path.splitext(os.path.basename(original_video_path))[0])
 
     for lang_code in constants.LANGUAGE_CODES.values():
         subtitle_file_path = os.path.join(
             dir_name, f"{video_file_no_ext}.{lang_code}.srt")
         if os.path.exists(subtitle_file_path):
-            print("A subtitle already exists. No transcription process needed")
+            # A subtitle already exists. No transcription process needed
             return subtitle_file_path
     print("No existing subtitle found.")
     return False

@@ -7,6 +7,9 @@ from transcripter import subtitles
 from transcripter import translate
 from transcripter import transcribe
 
+# Small delay for synchronization# Small delay for synchronization
+CORRECTION_OFFSET = 0.2
+
 
 class TranscriptionWorker(QtCore.QThread):
     """
@@ -47,8 +50,11 @@ class TranscriptionWorker(QtCore.QThread):
         start_time = time.time()
         self.update_progress(5)
         temp_srt_files = None
-        existing_subtitle_file = subtitles.srt_exists(
-            original_video_path=self.input_file)
+        existing_subtitle_file = None
+
+        if not self.force_new_srt:
+            existing_subtitle_file = subtitles.srt_exists(
+                original_video_path=self.input_file)
 
         if not existing_subtitle_file or self.force_new_srt is True:
             video_chunks = self.split_video()
@@ -81,12 +87,11 @@ class TranscriptionWorker(QtCore.QThread):
         Processes video chunks for transcription.
         """
         temp_srt_files = []
-        correction_offset = 0.7  # Small delay for synchronization
 
         for i, chunk in enumerate(video_chunks):
             self.update_progress(10 + int((i / len(video_chunks)) * 60))
             chunk_start_time = (
-                i * self.chunk_duration + (correction_offset if i > 0 else 0)
+                i * self.chunk_duration + (CORRECTION_OFFSET if i > 0 else 0)
                 )
             chunk_srt = transcribe.transcript(
                 input_file=chunk,

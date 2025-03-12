@@ -6,8 +6,8 @@ import subprocess
 from transcripter  import paths
 
 SOURCE = os.path.dirname(paths.get_current_script_dir())
-# DESTINATION = "//192.168.50.5/Software/Software/Logiciels/transcripter"
-DESTINATION = "C:/Users/ngaadmin/Documents/dreamwall/transcripter"
+DESTINATION = "//192.168.50.5/Software/Software/Logiciels/transcripter"
+# DESTINATION = "C:/Users/ngaadmin/Documents/dreamwall/transcripter"
 # DESTINATION = "C:/Users/NicolasG/Documents/dreamwall/transcripter"
 
 # Files to exclude
@@ -20,7 +20,6 @@ EXCLUDED_FILES = [
     "uninstall.py",
     "release_script.py",
     ".gitignore"
-
 ]
 
 # Directories to exclude

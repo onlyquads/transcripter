@@ -4,6 +4,8 @@ import tempfile
 import subprocess
 import urllib.request
 
+from transcripter import paths
+
 
 def split_video_into_chunks(input_video, chunk_duration=400):
     """
@@ -71,9 +73,12 @@ def get_ffmpeg_path():
     Check if FFmpeg is already installed in the custom path and return
     its path.
     """
-    documents_path = os.path.join(os.environ["USERPROFILE"], "Documents")
+    # documents_path = os.path.join(os.environ["USERPROFILE"], "Documents")
+    # ffmpeg_extract_path = os.path.join(
+    #     documents_path, "dreamwall", "transcripter", "ffmpeg")
+
     ffmpeg_extract_path = os.path.join(
-        documents_path, "dreamwall", "transcripter", "ffmpeg")
+        os.path.dirname(paths.get_current_script_dir()), "ffmpeg")
 
     if not os.path.exists(ffmpeg_extract_path):
         return None
@@ -98,7 +103,8 @@ def add_ffmpeg_to_path():
     ffmpeg_path = os.environ["FFMPEG"]
     if not ffmpeg_path or not os.path.exists(ffmpeg_path):
         raise FileNotFoundError(
-            "FFmpeg not found! Ensure FFmpeg is installed and set in environment variables.")
+            "FFmpeg not found! Ensure FFmpeg is installed and "
+            "set in environment variables.")
 
     print(f'>>> FFmpeg found at {ffmpeg_path}')
     os.environ["PATH"] += os.pathsep + os.path.dirname(ffmpeg_path)
