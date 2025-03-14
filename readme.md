@@ -47,12 +47,12 @@ even if a subtitle already exists. If unchecked and a subtitle exists, it
 will go to translate mode only (faster).
 
 >**Notes**:
->- Settings are stored in `/user/USERNAME/.transcripter_prefs`
+>- Settings are stored in `/users/USERNAME/.transcripter_prefs`
 You can tweak the settings and click on **"save as default"** to keep
 those settings for the next session or click on **"reset all"** to reset them default button.
->- Most of the needed package will be installed into `/user/USERNAME/documents/transcripter_venv`
->- Whisper models will be downloaded on request into `/user/USERNAME/.cache`
->- ArgosTranslate models will be downloaded on request into `/user/USERNAME/.local`
+>- Most of the needed package will be installed into `/users/USERNAME/documents/transcripter_venv`
+>- Whisper models will be downloaded on request into `/users/USERNAME/.cache`
+>- ArgosTranslate models will be downloaded on request into `/users/USERNAME/.local`
 
 
 ### Todo:

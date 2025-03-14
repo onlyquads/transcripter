@@ -334,7 +334,7 @@ class PromptInputDialog(QtWidgets.QDialog):
         Ensure the text does not exceed 300 characters.
         """
         text = self.text_edit.toPlainText()
-        if len(text) > 300:
+        if len(text) > 400:
             QtWidgets.QMessageBox.warning(
                 self, "Limit Exceeded", "Text cannot exceed 400 characters.")
             self.text_edit.moveCursor(self.text_edit.textCursor().End)
