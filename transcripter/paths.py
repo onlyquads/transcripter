@@ -7,12 +7,12 @@ def get_current_script_dir():
 
 
 def get_user_home_dir():
-    return os.path.join(os.path.expanduser("~"))
-
+    """Returns the user's home directory (cross-platform)."""
+    return os.environ.get("HOME") or os.environ.get("USERPROFILE")
 
 def get_user_documents_dir():
-    return os.path.join(get_user_home_dir(), "/Documents")
-
+    """Returns the user's Documents directory (cross-platform)."""
+    return os.path.join(get_user_home_dir(), "Documents")  # Remove leading "/"
 
 def get_filename_without_ext(file_path):
     full_filename = os.path.basename(file_path)
