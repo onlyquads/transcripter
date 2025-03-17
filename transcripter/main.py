@@ -5,6 +5,7 @@ from PySide6 import QtGui
 from transcripter import thread
 from transcripter import ffmpeg
 from transcripter import constants
+from transcripter import summerize
 from transcripter import preferences
 
 
@@ -15,10 +16,11 @@ class VideoTranscriptor(QtWidgets.QWidget):
         ffmpeg.add_ffmpeg_to_path()
         self.prompt = None
         preferences.set_default_preferences()
-        self.initUI()
+        self.load_main_ui()
         self.load_from_prefs()
+        # self.load_summerize_ui()
 
-    def initUI(self):
+    def load_main_ui(self):
         self.setWindowTitle(constants.TOOLNAME)
         self.setGeometry(100, 100, 200, 250)
 
@@ -164,6 +166,30 @@ class VideoTranscriptor(QtWidgets.QWidget):
         self.main_layout.addWidget(version_info)
         self.setLayout(self.main_layout)
 
+
+    def load_summerize_ui(self):
+        self.summerize_layout = QtWidgets.QVBoxLayout()
+
+        self.select_srt_button = QtWidgets.QPushButton("Load .srt file")
+        self.select_srt_button.clicked.connect(self.select_srt_file)
+
+        self.selected_srt_file = QtWidgets.QLabel("No .srt file selected")
+
+        self.launch_summerizer_process_button = QtWidgets.QPushButton(
+            "Launch summerize")
+        self.launch_summerizer_process_button.clicked.connect(
+            self.launch_summerizer_process)
+
+
+        self.summerize_layout.addWidget(self.select_srt_button)
+        self.summerize_layout.addWidget(self.selected_srt_file)
+        self.summerize_layout.addWidget(self.launch_summerizer_process_button)
+        self.main_layout.addLayout(self.summerize_layout)
+
+    def launch_summerizer_process(self):
+        srt_file = self.selected_srt_file.text()
+        summerize.summarize_srt(srt_file)
+
     def set_prompt(self):
         """Open the PromptInputDialog and get user input."""
         dialog = PromptInputDialog()
@@ -225,6 +251,17 @@ class VideoTranscriptor(QtWidgets.QWidget):
         )
         if file_path:
             self.file_label.setText(file_path)
+
+    def select_srt_file(self):
+        file_dialog = QtWidgets.QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(
+            self,
+            "Select srt File",
+            "",
+            "Video Files (*.srt)"
+        )
+        if file_path:
+            self.selected_srt_file.setText(file_path)
 
     def launch_processing(self):
         """

@@ -4,6 +4,8 @@ Shiboken6==6.5.0
 argostranslate
 langdetect
 openai-whisper
+# transformers
+# sentencepiece
 
 # Force PyTorch to install CUDA 12.1 version
 --extra-index-url https://download.pytorch.org/whl/cu121
