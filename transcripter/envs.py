@@ -16,7 +16,7 @@ def create_venv(
     :param python_executable: Python executable to use for the venv (optional).
     :param env_vars: Dictionary of environment variables (optional).
     """
-    print('Installing dreamwall software, please wait...')
+    print('Installing software, please wait...')
 
     # Check if the virtual environment already exists
     if os.path.exists(venv_path):
